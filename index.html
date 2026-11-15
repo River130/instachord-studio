@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>インスタコード作曲アシスト・スタジオ｜River130</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .active-step {
+      transform: scale(1.03);
+      border-color: #38bdf8 !important;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+      background-color: #1e293b !important;
+    }
+    .ic-btn:active {
+      transform: scale(0.95);
+      filter: brightness(1.25);
+    }
+    .string-pad {
+      transition: transform 0.06s ease, background-color 0.08s ease, box-shadow 0.08s ease;
+      touch-action: none;
+    }
+    .string-plucked {
+      background: linear-gradient(90deg, rgba(251,191,36,0.45), rgba(56,189,248,0.45)) !important;
+      border-color: #fbbf24 !important;
+      box-shadow: 0 0 14px rgba(251, 191, 36, 0.75);
+      transform: scaleX(0.985);
+    }
+    .beat-active-1 {
+      background-color: #f43f5e !important;
+      box-shadow: 0 0 12px rgba(244, 63, 94, 0.9);
+      transform: scale(1.25);
+    }
+    .beat-active-sub {
+      background-color: #38bdf8 !important;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+      transform: scale(1.15);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  </style>
+</head>
+<body class="min-h-screen pb-24">
+
+  <!-- ヘッダー -->
+  <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-3 sm:px-4 py-2.5">
+    <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center font-black text-white shadow-lg text-sm">
+          IC
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm sm:text-lg font-black tracking-tight text-white">インスタコード作曲スタジオ</h1>
+            <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">FREE公開版</span>
+          </div>
+          <p class="text-[11px] text-slate-400">数字譜の試聴・ドラム伴奏・6弦ストロムパッド搭載</p>
+        </div>
+      </div>
+
+      <!-- 音色・BPMコントロール -->
+      <div class="flex items-center gap-2 bg-slate-800/90 px-2.5 py-1.5 rounded-xl border border-slate-700">
+        <select id="toneSelect" class="bg-slate-900 text-xs sm:text-sm text-sky-300 font-bold px-2 py-1.5 rounded-lg border border-slate-700 focus:outline-none">
+          <option value="pluck">🎸 アコギ / ストラム</option>
+          <option value="epiano">🎹 エレピ / ベル</option>
+          <option value="cello">🎻 重厚チェロ / パッド</option>
+          <option value="synth">🎛️ アンビエント</option>
+        </select>
+        <div class="flex items-center gap-1 pl-1.5 border-l border-slate-700">
+          <span class="text-[11px] text-slate-400 font-bold">BPM</span>
+          <input id="bpmInput" type="number" value="85" min="40" max="200" class="mono w-14 bg-slate-900 text-center text-sm font-bold text-white py-1 rounded-lg border border-slate-700" />
+        </div>
+      </div>
+    </div>
+
+    <!-- リズム＆メトロノーム・専用コントロールバー -->
+    <div class="max-w-4xl mx-auto mt-2 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <button id="metroToggleBtn" onclick="toggleMetronome()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs sm:text-sm font-bold text-amber-300 flex items-center gap-1.5 transition">
+          <span id="metroIcon">🥁</span>
+          <span id="metroText">リズム ON</span>
+        </button>
+        <select id="drumPatternSelect" class="bg-slate-900 text-xs font-bold text-emerald-300 px-2.5 py-1.5 rounded-lg border border-slate-700 focus:outline-none">
+          <option value="pop8">🥁 8ビート・ポップス</option>
+          <option value="lofi">☕ Lo-Fi チルビート</option>
+          <option value="four">⚡ 4つ打ちダンス</option>
+          <option value="click">⏱️ クリック音のみ</option>
+        </select>
+        <label class="flex items-center gap-1 text-xs text-slate-300 cursor-pointer select-none bg-slate-800/60 px-2 py-1.5 rounded-lg border border-slate-700/70">
+          <input id="syncMetroCheck" type="checkbox" checked class="accent-sky-500 w-3.5 h-3.5" />
+          <span>進行と連動</span>
+        </label>
+      </div>
+
+      <!-- 4拍子 LEDインジケーター -->
+      <div class="flex items-center gap-2.5 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
+        <span class="text-[10px] font-bold text-slate-400">BEAT</span>
+        <div class="flex items-center gap-2">
+          <span id="beat-dot-0" class="w-2.5 h-2.5 rounded-full bg-slate-700 transition-all duration-75"></span>
+          <span id="beat-dot-1" class="w-2.5 h-2.5 rounded-full bg-slate-700 transition-all duration-75"></span>
+          <span id="beat-dot-2" class="w-2.5 h-2.5 rounded-full bg-slate-700 transition-all duration-75"></span>
+          <span id="beat-dot-3" class="w-2.5 h-2.5 rounded-full bg-slate-700 transition-all duration-75"></span>
+        </div>
+        <span id="beatNumberLabel" class="mono text-xs font-black text-slate-400 w-4 text-center">-</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-3 sm:px-4 pt-4 space-y-5">
+
+    <!-- 初見ユーザー向け：30秒クイック使い方ガイド -->
+    <details class="bg-slate-900/90 border border-sky-500/30 rounded-2xl overflow-hidden shadow">
+      <summary class="px-4 py-3 text-xs sm:text-sm font-bold text-sky-300 cursor-pointer select-none flex items-center justify-between hover:bg-slate-800/50 transition">
+        <span>💡 はじめての方へ：30秒でわかるインスタコード作曲ガイド（タップで開閉）</span>
+        <span class="text-[11px] text-slate-400">▼ 詳細</span>
+      </summary>
+      <div class="px-4 pb-4 pt-1 text-xs sm:text-sm text-slate-300 space-y-2 border-t border-slate-800/80 leading-relaxed">
+        <p><strong class="text-amber-300">STEP 1：</strong> ①でインスタコード本体の <strong>KEY</strong> を合わせ、ムードボタン（または②の数字選択）で4小節の進行を作ります。</p>
+        <p><strong class="text-amber-300">STEP 2：</strong> 「▶ ループ再生」を押すと、ドラム伴奏付きでコードが鳴り続けます。表示された <span class="text-amber-300 font-bold">オレンジ色の押さえ方（例：〜 + 7 + [ 3 ]）</span> を左手で押さえ、右手で6本の弦パッドを弾きましょう。</p>
+        <p><strong class="text-amber-300">STEP 3：</strong> 実機がない外出先でも、③の<strong>「左：コードボタン × 右：縦6本ストロムパッド」</strong>をスワイプ／タップして実機と同じ奏法で試奏できます！</p>
+      </div>
+    </details>
+
+    <!-- 1. ムード・ジャンル別 ワンタップ進行ジェネレーター -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 class="text-sm sm:text-base font-bold text-sky-400">
+          ① インスタコード本体KEY ＆ ムード進行生成
+        </h2>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-amber-300 font-bold">本体KEY:</span>
+          <select id="keySelect" class="mono bg-slate-800 text-xs sm:text-sm font-bold text-amber-300 px-3 py-1.5 rounded-lg border border-amber-500/40">
+            <option value="0">Key: C (1=C / 6=Am)</option>
+            <option value="2">Key: D (1=D / 6=Bm)</option>
+            <option value="4">Key: E (1=E / 6=C#m)</option>
+            <option value="5">Key: F (1=F / 6=Dm)</option>
+            <option value="7">Key: G (1=G / 6=Em)</option>
+            <option value="9">Key: A (1=A / 6=F#m)</option>
+            <option value="10">Key: Bb (1=Bb / 6=Gm)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <button onclick="applyMoodPreset('royal')" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition group">
+          <div class="text-xs sm:text-sm font-bold text-amber-400 group-hover:text-amber-300">👑 王道・エモい</div>
+          <div class="mono text-[11px] text-slate-300 font-bold mt-0.5">47 → 57 → 37 → 67</div>
+        </button>
+        <button onclick="applyMoodPreset('lofi')" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition group">
+          <div class="text-xs sm:text-sm font-bold text-emerald-400 group-hover:text-emerald-300">☕ Lo-Fi・夜カフェ</div>
+          <div class="mono text-[11px] text-slate-300 font-bold mt-0.5">27 → 57 → 17 → 67</div>
+        </button>
+        <button onclick="applyMoodPreset('dark')" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition group">
+          <div class="text-xs sm:text-sm font-bold text-purple-400 group-hover:text-purple-300">🌑 ダーク・不穏</div>
+          <div class="mono text-[11px] text-slate-300 font-bold mt-0.5">6 → 47 → 3sus4 → 3〜7</div>
+        </button>
+        <button onclick="applyMoodPreset('cinematic')" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition group">
+          <div class="text-xs sm:text-sm font-bold text-rose-400 group-hover:text-rose-300">🎬 壮大・シネマ</div>
+          <div class="mono text-[11px] text-slate-300 font-bold mt-0.5">1 → 5 → 6 → 47</div>
+        </button>
+      </div>
+    </section>
+
+    <!-- 2. 4小節コード進行シーケンサー -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <div>
+          <h2 class="text-sm sm:text-base font-bold text-white">② 4小節コード進行（インスタコード数字譜の自由編集＆試聴）</h2>
+          <p class="text-xs text-slate-400">各小節の「数字(1〜6)」や「修飾(〜・7)」を変更してオリジナル進行を鳴らせます</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="playLoopBtn" onclick="toggleLoop()" class="px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-sm shadow-lg shadow-sky-500/20 flex items-center gap-1.5 transition">
+            <span id="playIcon">▶</span>
+            <span id="playText">ループ再生</span>
+          </button>
+          <button onclick="randomizeProgression()" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs sm:text-sm border border-slate-700 transition">
+            🎲 ランダム提案
+          </button>
+        </div>
+      </div>
+
+      <!-- 4小節カード -->
+      <div id="chordSlots" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <!-- JSで描画 -->
+      </div>
+
+      <!-- インスタコード数字譜 -->
+      <div class="mt-4 pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 bg-slate-950/70 p-3 rounded-xl">
+        <div class="text-xs sm:text-sm">
+          <span class="font-bold text-amber-400">🎸 インスタコード数字譜：</span>
+          <span id="icNotationLine" class="mono font-black text-white ml-1">27  |  57  |  17  |  67</span>
+        </div>
+        <button onclick="copyIcNotation()" class="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 text-xs font-bold transition">
+          📋 数字譜をコピー
+        </button>
+      </div>
+    </section>
+
+    <!-- 3. 仮想インスタコード実機シミュレーター（左：コードボタン / 右：縦6本ストロムパッド） -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="text-sm sm:text-base font-bold text-amber-400">③ 仮想インスタコード実機（左：コード押さえ ／ 右：縦6本弦パッド）</h2>
+          <p class="text-xs text-slate-400">左でコード（数字＋修飾）を選び、右の縦に並んだ6つの横長パッドを上から下へなぞる（またはタップ）して弾きます</p>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-amber-500/40">
+          <span class="text-[11px] text-slate-400 font-bold">選択中コード:</span>
+          <span id="activePadChordLabel" class="mono text-sm sm:text-base font-black text-amber-300">Cmaj7 [ 1 ]</span>
+        </div>
+      </div>
+
+      <!-- 実機レイアウト：左（コードボタン群） ＋ 右（横長パッド×縦6本） -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800">
+        
+        <!-- 左側（ネック側）：数字ボタン 1〜6 ＆ 修飾ボタン -->
+        <div class="md:col-span-6 flex flex-col justify-between space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-sky-400">◀ 左手：コード押さえ（数字＋修飾）</span>
+            <button onclick="resetPadModifiers()" class="text-[11px] px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 font-bold">
+              修飾解除
+            </button>
+          </div>
+
+          <!-- 修飾ボタン（〜・7・sus4・dim） -->
+          <div class="grid grid-cols-4 gap-1.5">
+            <button id="mod-swap" onclick="toggleModifier('swap')" class="ic-btn py-2 px-1 rounded-xl bg-slate-800 border-2 border-slate-700 text-xs font-black text-slate-200 transition">
+              〜<br><span class="text-[9px] font-normal text-slate-400">スワップ</span>
+            </button>
+            <button id="mod-7" onclick="toggleModifier('7')" class="ic-btn py-2 px-1 rounded-xl bg-slate-800 border-2 border-slate-700 text-xs font-black text-slate-200 transition">
+              7<br><span class="text-[9px] font-normal text-slate-400">セブンス</span>
+            </button>
+            <button id="mod-sus4" onclick="toggleModifier('sus4')" class="ic-btn py-2 px-1 rounded-xl bg-slate-800 border-2 border-slate-700 text-xs font-black text-slate-200 transition">
+              sus4<br><span class="text-[9px] font-normal text-slate-400">保留音</span>
+            </button>
+            <button id="mod-dim" onclick="toggleModifier('dim')" class="ic-btn py-2 px-1 rounded-xl bg-slate-800 border-2 border-slate-700 text-xs font-black text-slate-200 transition">
+              dim<br><span class="text-[9px] font-normal text-slate-400">経過音</span>
+            </button>
+          </div>
+
+          <!-- メイン数字ボタン 1〜6 -->
+          <div id="icMainPads" class="grid grid-cols-3 gap-2 select-none">
+            <!-- JSで描画 -->
+          </div>
+        </div>
+
+        <!-- 右側（ボディ側）：縦に6つ並んだ横長パッド（弦の役割） -->
+        <div class="md:col-span-6 flex flex-col justify-between space-y-2 border-t md:border-t-0 md:border-l border-slate-800 pt-3 md:pt-0 md:pl-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-amber-400">▶ 右手：6弦パッド（上から下へスワイプ／単音弾き）</span>
+            <button onclick="strumAllStrings()" class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow transition">
+              🎸 ジャラーン（全弦）
+            </button>
+          </div>
+
+          <!-- 横長パッドが縦に6つ並ぶストロムエリア -->
+          <div id="sixStringArea" class="flex flex-col gap-1.5 select-none py-1">
+            <!-- JSで6本の横長パッドを描画 -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 4. アイデア保存 ＆ AI音楽生成プロンプト -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-sm sm:text-base font-bold text-emerald-400">④ 作曲メモ保存 ＆ Suno/Udioプロンプト出力</h2>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="saveIdea()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow transition">
+            💾 この進行を保存
+          </button>
+          <button onclick="copyPrompt()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 font-bold text-xs sm:text-sm transition">
+            📋 AIプロンプトコピー
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+        <div class="text-[11px] text-slate-400 mb-1 font-bold">Suno / Udio 貼り付け用 英語スタイル指示文（自動連動）：</div>
+        <p id="aiPromptOutput" class="mono text-xs sm:text-sm text-emerald-300 break-words leading-relaxed"></p>
+      </div>
+
+      <!-- 保存済みリスト -->
+      <div>
+        <div class="text-xs font-bold text-slate-400 mb-2">保存済みの作曲メモ（ブラウザ内に自動保存・タップで呼出）：</div>
+        <div id="savedList" class="space-y-2 max-h-52 overflow-y-auto">
+          <!-- JSで描画 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- フッター -->
+    <footer class="pt-4 pb-6 text-center space-y-2.5 border-t border-slate-800/80">
+      <p class="text-xs text-slate-300">
+        Created by <span class="font-bold text-white">River130</span> ｜ インスタコード演奏・作曲サポートWebツール（無料公開版）
+      </p>
+      <div>
+        <button onclick="shareApp()" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-amber-300 transition">
+          🔗 この作曲ツールをSNS・仲間にシェア
+        </button>
+      </div>
+      <div class="max-w-2xl mx-auto pt-2 text-[10px] sm:text-[11px] text-slate-500 leading-relaxed space-y-0.5">
+        <p>※本ツールはインスタコードユーザーによる個人制作の非公式サポートツールです（インスタコード株式会社様とは関係ありません）。</p>
+        <p>※保存データはご利用中のブラウザ内（LocalStorage）にのみ保持され、外部サーバーへ送信されることはありません。本ツールの利用により生じた損害等について制作者は責任を負いかねます。</p>
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- トースト通知 -->
+  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-amber-400 text-slate-950 font-black text-xs sm:text-sm px-5 py-2.5 rounded-full shadow-2xl opacity-0 pointer-events-none transition-opacity duration-200 whitespace-nowrap">
+    通知メッセージ
+  </div>
+
+  <script>
+    // --- 音楽理論・インスタコードマッピングデータ ---
+    const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const CHORD_TYPES = {
+      'maj':  { label: '',     intervals: [0, 4, 7] },
+      'm':    { label: 'm',    intervals: [0, 3, 7] },
+      'maj7': { label: 'maj7', intervals: [0, 4, 7, 11] },
+      'm7':   { label: 'm7',   intervals: [0, 3, 7, 10] },
+      '7':    { label: '7',    intervals: [0, 4, 7, 10] },
+      'sus4': { label: 'sus4', intervals: [0, 5, 7] },
+      'dim':  { label: 'dim',  intervals: [0, 3, 6] }
+    };
+
+    const IC_BUTTONS = [
+      { num: 1, offset: 0, defaultMinor: false },
+      { num: 2, offset: 2, defaultMinor: true  },
+      { num: 3, offset: 4, defaultMinor: true  },
+      { num: 4, offset: 5, defaultMinor: false },
+      { num: 5, offset: 7, defaultMinor: false },
+      { num: 6, offset: 9, defaultMinor: true  }
+    ];
+
+    let slots = [
+      { num: 2, mod: '7' },
+      { num: 5, mod: '7' },
+      { num: 1, mod: '7' },
+      { num: 6, mod: '7' }
+    ];
+
+    let currentMood = 'lofi';
+    let isPlaying = false;
+    let currentStep = 0;
+    let loopTimer = null;
+    let audioCtx = null;
+
+    let isMetroRunning = false;
+    let metroTimer = null;
+    let currentSubStep = 0;
+
+    // 左手：現在押さえているコードボタン＆修飾状態
+    let selectedPadNum = 1;
+    let padMods = { swap: false, '7': false, sus4: false, dim: false };
+    let isStrummingPointer = false;
+    let lastPluckedString = -1;
+
+    // --- Web Audio API エンジン ---
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function midiToFreq(midi) {
+      return 440 * Math.pow(2, (midi - 69) / 12);
+    }
+
+    function playDrumHit(type) {
+      initAudio();
+      const now = audioCtx.currentTime;
+
+      if (type === 'kick') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(42, now + 0.12);
+        gain.gain.setValueAtTime(0.45, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.17);
+      } else if (type === 'snare') {
+        const bufferSize = audioCtx.sampleRate * 0.12;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(900, now);
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.24, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        noise.start(now);
+      } else if (type === 'hat') {
+        const bufferSize = audioCtx.sampleRate * 0.04;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(6000, now);
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.09, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        noise.start(now);
+      } else if (type === 'clickAccent' || type === 'clickSub') {
+        const isAccent = type === 'clickAccent';
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(isAccent ? 1200 : 800, now);
+        osc.frequency.exponentialRampToValueAtTime(isAccent ? 600 : 400, now + 0.04);
+        gain.gain.setValueAtTime(isAccent ? 0.25 : 0.16, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.055);
+      }
+    }
+
+    function updateBeatVisual(beatIdx) {
+      for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById(`beat-dot-${i}`);
+        dot.classList.remove('beat-active-1', 'beat-active-sub');
+        if (i === beatIdx) {
+          dot.classList.add(i === 0 ? 'beat-active-1' : 'beat-active-sub');
+        }
+      }
+      document.getElementById('beatNumberLabel').textContent = beatIdx + 1;
+    }
+
+    function resetBeatVisual() {
+      for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById(`beat-dot-${i}`);
+        dot.classList.remove('beat-active-1', 'beat-active-sub');
+      }
+      document.getElementById('beatNumberLabel').textContent = '-';
+    }
+
+    function toggleMetronome() {
+      if (isMetroRunning) stopMetronome();
+      else startMetronome();
+    }
+
+    function startMetronome(resetBeat = true) {
+      initAudio();
+      clearTimeout(metroTimer);
+      isMetroRunning = true;
+      if (resetBeat) currentSubStep = 0;
+
+      const btn = document.getElementById('metroToggleBtn');
+      btn.classList.remove('bg-slate-800', 'text-amber-300', 'border-slate-600');
+      btn.classList.add('bg-amber-400', 'text-slate-950', 'border-amber-300', 'shadow-lg');
+      document.getElementById('metroText').textContent = 'リズム停止';
+
+      const tick = () => {
+        if (!isMetroRunning) return;
+        const pattern = document.getElementById('drumPatternSelect').value;
+
+        if (currentSubStep % 2 === 0) {
+          updateBeatVisual(currentSubStep / 2);
+        }
+
+        if (pattern === 'click') {
+          if (currentSubStep === 0) playDrumHit('clickAccent');
+          else if (currentSubStep % 2 === 0) playDrumHit('clickSub');
+        } else if (pattern === 'pop8') {
+          playDrumHit('hat');
+          if (currentSubStep === 0 || currentSubStep === 4) playDrumHit('kick');
+          if (currentSubStep === 2 || currentSubStep === 6) playDrumHit('snare');
+        } else if (pattern === 'lofi') {
+          if (currentSubStep % 2 === 0) playDrumHit('hat');
+          if (currentSubStep === 0 || currentSubStep === 5) playDrumHit('kick');
+          if (currentSubStep === 2 || currentSubStep === 6) playDrumHit('snare');
+        } else if (pattern === 'four') {
+          if (currentSubStep % 2 === 0) playDrumHit('kick');
+          if (currentSubStep % 2 === 1) playDrumHit('hat');
+          if (currentSubStep === 2 || currentSubStep === 6) playDrumHit('snare');
+        }
+
+        currentSubStep = (currentSubStep + 1) % 8;
+        const bpm = Math.max(40, Math.min(200, parseInt(document.getElementById('bpmInput').value, 10) || 85));
+        const eighthMs = ((60 / bpm) / 2) * 1000;
+        metroTimer = setTimeout(tick, eighthMs);
+      };
+      tick();
+    }
+
+    function stopMetronome() {
+      isMetroRunning = false;
+      clearTimeout(metroTimer);
+      const btn = document.getElementById('metroToggleBtn');
+      btn.classList.remove('bg-amber-400', 'text-slate-950', 'border-amber-300', 'shadow-lg');
+      btn.classList.add('bg-slate-800', 'text-amber-300', 'border-slate-600');
+      document.getElementById('metroText').textContent = 'リズム ON';
+      resetBeatVisual();
+    }
+
+    function playNotes(midiNotes, durationSec = 1.2, useStrum = true) {
+      initAudio();
+      const tone = document.getElementById('toneSelect').value;
+      const now = audioCtx.currentTime;
+
+      midiNotes.forEach((midi, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+
+        let peakGain = midiNotes.length === 1 ? 0.16 : 0.09;
+        let attack = 0.015;
+        let release = durationSec;
+        let strumDelay = useStrum ? idx * 0.032 : 0;
+
+        if (tone === 'pluck') {
+          osc.type = 'triangle';
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(2500, now);
+          attack = 0.008;
+          strumDelay = useStrum ? idx * 0.035 : 0;
+        } else if (tone === 'epiano') {
+          osc.type = 'triangle';
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(1750, now);
+          attack = 0.018;
+        } else if (tone === 'cello') {
+          osc.type = 'sawtooth';
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(680, now);
+          attack = 0.18;
+          peakGain *= 0.85;
+          strumDelay = useStrum ? idx * 0.015 : 0;
+        } else if (tone === 'synth') {
+          osc.type = 'sine';
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(1250, now);
+          attack = 0.12;
+        }
+
+        osc.frequency.setValueAtTime(midiToFreq(midi), now + strumDelay);
+
+        gain.gain.setValueAtTime(0.0001, now + strumDelay);
+        gain.gain.linearRampToValueAtTime(peakGain, now + strumDelay + attack);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + strumDelay + release);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now + strumDelay);
+        osc.stop(now + strumDelay + release + 0.05);
+      });
+    }
+
+    // --- インスタコード数字(1〜6)＋修飾から実コード・6弦ボイシングを算出 ---
+    function resolveSlotInfo(slot) {
+      const btn = IC_BUTTONS.find(b => b.num === slot.num) || IC_BUTTONS[0];
+      const baseKey = parseInt(document.getElementById('keySelect').value, 10);
+      const noteIndex = (baseKey + btn.offset) % 12;
+      const rootNoteName = NOTE_NAMES[noteIndex];
+
+      let chordType = 'maj';
+      let buttonGuide = `[ ${btn.num} ]`;
+      let shortNotation = `${btn.num}`;
+
+      if (slot.mod === 'none') {
+        chordType = btn.defaultMinor ? 'm' : 'maj';
+        buttonGuide = `[ ${btn.num} ]`;
+        shortNotation = `${btn.num}`;
+      } else if (slot.mod === 'swap') {
+        chordType = btn.defaultMinor ? 'maj' : 'm';
+        buttonGuide = `〜 + [ ${btn.num} ]`;
+        shortNotation = `${btn.num}〜`;
+      } else if (slot.mod === '7') {
+        chordType = btn.defaultMinor ? 'm7' : (btn.num === 5 ? '7' : 'maj7');
+        buttonGuide = `7 + [ ${btn.num} ]`;
+        shortNotation = `${btn.num}7`;
+      } else if (slot.mod === 'swap7') {
+        const swappedMinor = !btn.defaultMinor;
+        chordType = swappedMinor ? 'm7' : '7';
+        buttonGuide = `〜 + 7 + [ ${btn.num} ]`;
+        shortNotation = `${btn.num}〜7`;
+      } else if (slot.mod === 'sus4') {
+        chordType = 'sus4';
+        buttonGuide = `sus4 + [ ${btn.num} ]`;
+        shortNotation = `${btn.num}sus4`;
+      } else if (slot.mod === 'dim') {
+        chordType = 'dim';
+        buttonGuide = `dim + [ ${btn.num} ]`;
+        shortNotation = `${btn.num}dim`;
+      }
+
+      const chordName = rootNoteName + CHORD_TYPES[chordType].label;
+      const rootMidi = 48 + noteIndex;
+      const intervals = CHORD_TYPES[chordType].intervals;
+
+      // 6本の弦パッド用（上から6弦=低音ルート → 1弦=高音までの6音ボイシング）
+      let sixStrings = [];
+      if (intervals.length === 3) {
+        sixStrings = [
+          rootMidi - 12,                 // 6弦（ルート低音）
+          rootMidi - 12 + intervals[2],  // 5弦（5度）
+          rootMidi,                      // 4弦（ルート中音）
+          rootMidi + intervals[1],       // 3弦（3度/4度）
+          rootMidi + intervals[2],       // 2弦（5度）
+          rootMidi + 12                  // 1弦（ルート高音）
+        ];
+      } else {
+        sixStrings = [
+          rootMidi - 12,                 // 6弦（ルート低音）
+          rootMidi,                      // 5弦（ルート中音）
+          rootMidi + intervals[1],       // 4弦（3度）
+          rootMidi + intervals[2],       // 3弦（5度）
+          rootMidi + intervals[3],       // 2弦（7度）
+          rootMidi + 12                  // 1弦（ルート高音）
+        ];
+      }
+
+      return { chordName, buttonGuide, shortNotation, midiNotes: sixStrings };
+    }
+
+    // --- UI描画 ---
+    function renderSlots() {
+      const container = document.getElementById('chordSlots');
+      container.innerHTML = '';
+
+      let notationList = [];
+
+      slots.forEach((slot, index) => {
+        const info = resolveSlotInfo(slot);
+        notationList.push(info.shortNotation);
+
+        const card = document.createElement('div');
+        card.id = `slot-card-${index}`;
+        card.className = 'bg-slate-800/85 border-2 border-slate-700 rounded-xl p-3 flex flex-col justify-between transition-all cursor-pointer';
+        card.onclick = (e) => {
+          if (e.target.tagName === 'SELECT') return;
+          playSlot(index);
+        };
+
+        let numOptions = '';
+        IC_BUTTONS.forEach(b => {
+          numOptions += `<option value="${b.num}" ${slot.num === b.num ? 'selected' : ''}>ボタン [ ${b.num} ]</option>`;
+        });
+
+        const modChoices = [
+          { val: 'none',  label: '基本 (なし)' },
+          { val: 'swap',  label: '〜 (スワップ)' },
+          { val: '7',     label: '7 (セブンス)' },
+          { val: 'swap7', label: '〜 + 7' },
+          { val: 'sus4',  label: 'sus4' },
+          { val: 'dim',   label: 'dim' }
+        ];
+        let modOptions = modChoices.map(m =>
+          `<option value="${m.val}" ${slot.mod === m.val ? 'selected' : ''}>${m.label}</option>`
+        ).join('');
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-1">
+            <span class="mono text-[11px] font-bold text-slate-400">BAR ${index + 1}</span>
+            <span class="text-[11px] text-sky-400 font-bold">🔊 試聴</span>
+          </div>
+          <div class="mono text-2xl sm:text-3xl font-black text-white text-center mt-0.5 tracking-tight">
+            ${info.chordName}
+          </div>
+          <div class="my-2 px-2 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-center">
+            <div class="text-[9px] font-bold text-amber-300/80 leading-none mb-0.5">インスタコード操作</div>
+            <div class="mono text-xs sm:text-sm font-black text-amber-300">${info.buttonGuide}</div>
+          </div>
+          <div class="grid grid-cols-2 gap-1 pt-2 border-t border-slate-700/70">
+            <select onchange="updateSlotNum(${index}, this.value)" class="mono bg-slate-900 text-[11px] text-amber-300 font-bold px-1 py-1.5 rounded border border-slate-700">
+              ${numOptions}
+            </select>
+            <select onchange="updateSlotMod(${index}, this.value)" class="mono bg-slate-900 text-[11px] text-sky-300 font-bold px-1 py-1.5 rounded border border-slate-700">
+              ${modOptions}
+            </select>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('icNotationLine').textContent = notationList.join('   |   ');
+      updatePrompt();
+      renderInstaChordRealSimulator();
+    }
+
+    function updateSlotNum(index, val) {
+      slots[index].num = parseInt(val, 10);
+      renderSlots();
+      playSlot(index);
+    }
+
+    function updateSlotMod(index, val) {
+      slots[index].mod = val;
+      renderSlots();
+      playSlot(index);
+    }
+
+    function playSlot(index) {
+      document.querySelectorAll('#chordSlots > div').forEach(el => el.classList.remove('active-step'));
+      const card = document.getElementById(`slot-card-${index}`);
+      if (card) card.classList.add('active-step');
+      const bpm = parseInt(document.getElementById('bpmInput').value, 10) || 85;
+      const barSec = (60 / bpm) * 4;
+      const info = resolveSlotInfo(slots[index]);
+      playNotes(info.midiNotes, Math.min(barSec, 2.2), true);
+    }
+
+    // --- 仮想インスタコード実機（左：ボタン押さえ / 右：縦6本弦パッド） ---
+    function toggleModifier(modKey) {
+      if (modKey === 'sus4') {
+        padMods.sus4 = !padMods.sus4;
+        if (padMods.sus4) padMods.dim = false;
+      } else if (modKey === 'dim') {
+        padMods.dim = !padMods.dim;
+        if (padMods.dim) {
+          padMods.sus4 = false;
+          padMods['7'] = false;
+        }
+      } else {
+        padMods[modKey] = !padMods[modKey];
+        if (modKey === '7' && padMods['7']) padMods.dim = false;
+      }
+      renderInstaChordRealSimulator();
+      strumAllStrings();
+    }
+
+    function resetPadModifiers() {
+      padMods = { swap: false, '7': false, sus4: false, dim: false };
+      renderInstaChordRealSimulator();
+    }
+
+    function getCurrentPadModString() {
+      if (padMods.dim) return 'dim';
+      if (padMods.sus4) return 'sus4';
+      if (padMods.swap && padMods['7']) return 'swap7';
+      if (padMods.swap) return 'swap';
+      if (padMods['7']) return '7';
+      return 'none';
+    }
+
+    function pluckSingleString(strIdx) {
+      const currentMod = getCurrentPadModString();
+      const info = resolveSlotInfo({ num: selectedPadNum, mod: currentMod });
+      const midi = info.midiNotes[strIdx];
+      playNotes([midi], 1.1, false);
+
+      const padEl = document.getElementById(`string-pad-${strIdx}`);
+      if (padEl) {
+        padEl.classList.add('string-plucked');
+        setTimeout(() => padEl.classList.remove('string-plucked'), 180);
+      }
+    }
+
+    function strumAllStrings() {
+      const currentMod = getCurrentPadModString();
+      const info = resolveSlotInfo({ num: selectedPadNum, mod: currentMod });
+      playNotes(info.midiNotes, 1.4, true);
+
+      for (let i = 0; i < 6; i++) {
+        setTimeout(() => {
+          const padEl = document.getElementById(`string-pad-${i}`);
+          if (padEl) {
+            padEl.classList.add('string-plucked');
+            setTimeout(() => padEl.classList.remove('string-plucked'), 200);
+          }
+        }, i * 32);
+      }
+    }
+
+    function renderInstaChordRealSimulator() {
+      ['swap', '7', 'sus4', 'dim'].forEach(k => {
+        const el = document.getElementById(`mod-${k}`);
+        if (padMods[k]) {
+          el.classList.remove('bg-slate-800', 'border-slate-700', 'text-slate-200');
+          el.classList.add('bg-amber-400', 'border-amber-300', 'text-slate-950', 'shadow-lg');
+        } else {
+          el.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-200');
+          el.classList.remove('bg-amber-400', 'border-amber-300', 'text-slate-950', 'shadow-lg');
+        }
+      });
+
+      const currentMod = getCurrentPadModString();
+      const activeInfo = resolveSlotInfo({ num: selectedPadNum, mod: currentMod });
+      document.getElementById('activePadChordLabel').textContent = `${activeInfo.chordName}  (${activeInfo.buttonGuide})`;
+
+      // 左側：数字ボタン 1〜6
+      const btnContainer = document.getElementById('icMainPads');
+      btnContainer.innerHTML = '';
+
+      IC_BUTTONS.forEach(btn => {
+        const info = resolveSlotInfo({ num: btn.num, mod: currentMod });
+        const isSelected = (selectedPadNum === btn.num);
+
+        const bEl = document.createElement('button');
+        bEl.className = `ic-btn py-2.5 px-2 rounded-xl border-2 flex flex-col items-center justify-center transition ${
+          isSelected
+            ? 'bg-sky-500/25 border-sky-400 text-white shadow-lg shadow-sky-500/20'
+            : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+        }`;
+        bEl.innerHTML = `
+          <span class="mono text-xl font-black ${isSelected ? 'text-sky-300' : 'text-amber-400'} leading-none">${btn.num}</span>
+          <span class="mono text-xs font-bold mt-1">${info.chordName}</span>
+        `;
+        bEl.onclick = () => {
+          selectedPadNum = btn.num;
+          renderInstaChordRealSimulator();
+          strumAllStrings();
+        };
+        btnContainer.appendChild(bEl);
+      });
+
+      // 右側：横長パッドが縦に6つ並んだ弦エリア
+      const stringContainer = document.getElementById('sixStringArea');
+      stringContainer.innerHTML = '';
+      const stringLabels = ['6弦 (低音・ルート)', '5弦', '4弦', '3弦', '2弦', '1弦 (高音)'];
+
+      for (let i = 0; i < 6; i++) {
+        const midi = activeInfo.midiNotes[i];
+        const noteName = NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1);
+
+        const pad = document.createElement('div');
+        pad.id = `string-pad-${i}`;
+        pad.dataset.strIdx = i;
+        pad.className = 'string-pad h-9 sm:h-10 w-full rounded-lg bg-slate-800/95 hover:bg-slate-700 border border-slate-600/80 px-3 flex items-center justify-between cursor-pointer';
+        pad.innerHTML = `
+          <span class="text-[11px] font-bold text-slate-400">${stringLabels[i]}</span>
+          <span class="h-0.5 flex-1 mx-3 bg-gradient-to-r from-amber-500/40 via-slate-500/60 to-sky-500/40 rounded-full"></span>
+          <span class="mono text-xs font-black text-amber-300">${noteName}</span>
+        `;
+        pad.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          isStrummingPointer = true;
+          lastPluckedString = i;
+          pluckSingleString(i);
+        });
+        stringContainer.appendChild(pad);
+      }
+    }
+
+    // 指・マウスで縦に並んだ6つの横長パッドをなぞった（スワイプした）時の連続発音
+    document.addEventListener('pointermove', (e) => {
+      if (!isStrummingPointer) return;
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      if (!target) return;
+      const padEl = target.closest('.string-pad');
+      if (padEl && padEl.dataset.strIdx !== undefined) {
+        const idx = parseInt(padEl.dataset.strIdx, 10);
+        if (idx !== lastPluckedString) {
+          lastPluckedString = idx;
+          pluckSingleString(idx);
+        }
+      }
+    });
+
+    document.addEventListener('pointerup', () => {
+      isStrummingPointer = false;
+      lastPluckedString = -1;
+    });
+
+    // --- ループ再生制御 ---
+    function toggleLoop() {
+      if (isPlaying) stopLoop();
+      else startLoop();
+    }
+
+    function startLoop() {
+      initAudio();
+      isPlaying = true;
+      currentStep = 0;
+      document.getElementById('playIcon').textContent = '■';
+      document.getElementById('playText').textContent = '停止';
+      document.getElementById('playLoopBtn').classList.replace('bg-sky-500', 'bg-rose-500');
+
+      if (document.getElementById('syncMetroCheck').checked) {
+        startMetronome(true);
+      }
+
+      const stepPlay = () => {
+        if (!isPlaying) return;
+        playSlot(currentStep);
+        currentStep = (currentStep + 1) % 4;
+        const bpm = Math.max(40, Math.min(200, parseInt(document.getElementById('bpmInput').value, 10) || 85));
+        const barMs = (60 / bpm) * 4 * 1000;
+        loopTimer = setTimeout(stepPlay, barMs);
+      };
+      stepPlay();
+    }
+
+    function stopLoop() {
+      isPlaying = false;
+      clearTimeout(loopTimer);
+      document.getElementById('playIcon').textContent = '▶';
+      document.getElementById('playText').textContent = 'ループ再生';
+      document.getElementById('playLoopBtn').classList.replace('bg-rose-500', 'bg-sky-500');
+      document.querySelectorAll('#chordSlots > div').forEach(el => el.classList.remove('active-step'));
+
+      if (document.getElementById('syncMetroCheck').checked && isMetroRunning) {
+        stopMetronome();
+      }
+    }
+
+    // --- ムード別プリセット ---
+    function applyMoodPreset(mood) {
+      currentMood = mood;
+      const presets = {
+        royal: {
+          bpm: 120,
+          tone: 'pluck',
+          drum: 'pop8',
+          chords: [
+            { num: 4, mod: '7' },
+            { num: 5, mod: '7' },
+            { num: 3, mod: '7' },
+            { num: 6, mod: '7' }
+          ]
+        },
+        lofi: {
+          bpm: 82,
+          tone: 'epiano',
+          drum: 'lofi',
+          chords: [
+            { num: 2, mod: '7' },
+            { num: 5, mod: '7' },
+            { num: 1, mod: '7' },
+            { num: 6, mod: '7' }
+          ]
+        },
+        dark: {
+          bpm: 68,
+          tone: 'cello',
+          drum: 'click',
+          chords: [
+            { num: 6, mod: 'none' },
+            { num: 4, mod: '7' },
+            { num: 3, mod: 'sus4' },
+            { num: 3, mod: 'swap7' }
+          ]
+        },
+        cinematic: {
+          bpm: 78,
+          tone: 'synth',
+          drum: 'pop8',
+          chords: [
+            { num: 1, mod: 'none' },
+            { num: 5, mod: 'none' },
+            { num: 6, mod: 'none' },
+            { num: 4, mod: '7' }
+          ]
+        }
+      };
+
+      const p = presets[mood];
+      document.getElementById('bpmInput').value = p.bpm;
+      document.getElementById('toneSelect').value = p.tone;
+      document.getElementById('drumPatternSelect').value = p.drum;
+      slots = JSON.parse(JSON.stringify(p.chords));
+      renderSlots();
+      showToast(`ムード「${mood.toUpperCase()}」をセットしました`);
+      if (!isPlaying) playSlot(0);
+    }
+
+    function randomizeProgression() {
+      const candidates = [
+        [ { num: 6, mod: '7' }, { num: 4, mod: '7' }, { num: 1, mod: 'none' }, { num: 5, mod: 'none' } ],
+        [ { num: 1, mod: '7' }, { num: 6, mod: '7' }, { num: 4, mod: '7' }, { num: 5, mod: 'sus4' } ],
+        [ { num: 6, mod: 'none' }, { num: 5, mod: 'none' }, { num: 4, mod: 'none' }, { num: 3, mod: 'swap7' } ],
+        [ { num: 4, mod: '7' }, { num: 3, mod: 'swap7' }, { num: 6, mod: '7' }, { num: 1, mod: '7' } ],
+        [ { num: 2, mod: '7' }, { num: 4, mod: '7' }, { num: 6, mod: '7' }, { num: 5, mod: '7' } ]
+      ];
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      slots = JSON.parse(JSON.stringify(pick));
+      renderSlots();
+      showToast('新しいインスタコード進行を提案しました');
+      if (!isPlaying) playSlot(0);
+    }
+
+    function updatePrompt() {
+      const bpm = document.getElementById('bpmInput').value || 85;
+      const chordStr = slots.map(s => resolveSlotInfo(s).chordName).join(' - ');
+      const moodMap = {
+        dark: 'dark fantasy, mysterious ambient, deep cello drone, cinematic tension, minimal slow rhythm, instrumental, no vocals',
+        royal: 'emotional J-pop instrumental, acoustic guitar strumming and electric piano, uplifting melody, clean modern production, no vocals',
+        lofi: 'chill lo-fi hip hop beat, warm Rhodes electric piano, dusty vinyl texture, relaxing night study BGM, instrumental',
+        cinematic: 'emotional cinematic soundtrack, atmospheric synth pads, gentle acoustic guitar, storytelling background music, instrumental'
+      };
+      const promptText = `${moodMap[currentMood]}, ${bpm} BPM, chord progression: ${chordStr}`;
+      document.getElementById('aiPromptOutput').textContent = promptText;
+    }
+
+    // --- 保存・コピー・シェア機能 ---
+    function copyIcNotation() {
+      const keyLabel = document.getElementById('keySelect').selectedOptions[0].text;
+      const line = document.getElementById('icNotationLine').textContent;
+      const chords = slots.map(s => resolveSlotInfo(s).chordName).join(' - ');
+      const text = `【InstaChord進行】${keyLabel}\n数字譜: ${line}\nコード: ${chords}`;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 インスタコード数字譜をコピーしました');
+      });
+    }
+
+    function saveIdea() {
+      const saved = JSON.parse(localStorage.getItem('river130_composer_ideas_v2') || '[]');
+      const chordStr = slots.map(s => resolveSlotInfo(s).chordName).join(' → ');
+      const icStr = slots.map(s => resolveSlotInfo(s).shortNotation).join(' → ');
+      const bpm = document.getElementById('bpmInput').value;
+      const tone = document.getElementById('toneSelect').value;
+      const keyVal = document.getElementById('keySelect').value;
+      const nowStr = new Date().toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+      saved.unshift({
+        id: Date.now(),
+        time: nowStr,
+        chordStr,
+        icStr,
+        bpm,
+        tone,
+        keyVal,
+        mood: currentMood,
+        slots: JSON.parse(JSON.stringify(slots))
+      });
+      localStorage.setItem('river130_composer_ideas_v2', JSON.stringify(saved.slice(0, 20)));
+      renderSavedList();
+      showToast('💾 インスタコード進行を保存しました');
+    }
+
+    function renderSavedList() {
+      const list = document.getElementById('savedList');
+      const saved = JSON.parse(localStorage.getItem('river130_composer_ideas_v2') || '[]');
+      if (saved.length === 0) {
+        list.innerHTML = '<div class="text-xs text-slate-500 py-2">まだ保存された進行はありません。</div>';
+        return;
+      }
+      list.innerHTML = saved.map(item => `
+        <div class="flex items-center justify-between bg-slate-800/70 border border-slate-700/80 rounded-xl px-3 py-2">
+          <div onclick="loadIdea(${item.id})" class="cursor-pointer flex-1">
+            <div class="mono text-xs sm:text-sm font-black text-amber-300">数字譜: ${item.icStr}</div>
+            <div class="mono text-[11px] text-slate-300">(${item.chordStr})</div>
+            <div class="text-[10px] text-slate-400">BPM ${item.bpm} / ${item.mood.toUpperCase()} / ${item.time}</div>
+          </div>
+          <button onclick="deleteIdea(${item.id})" class="text-xs text-rose-400 hover:text-rose-300 px-2.5 py-1.5 rounded bg-slate-900/70 font-bold">🗑️ 削除</button>
+        </div>
+      `).join('');
+    }
+
+    function loadIdea(id) {
+      const saved = JSON.parse(localStorage.getItem('river130_composer_ideas_v2') || '[]');
+      const target = saved.find(i => i.id === id);
+      if (!target) return;
+      document.getElementById('bpmInput').value = target.bpm;
+      document.getElementById('toneSelect').value = target.tone;
+      document.getElementById('keySelect').value = target.keyVal;
+      currentMood = target.mood || 'lofi';
+      slots = JSON.parse(JSON.stringify(target.slots));
+      renderSlots();
+      playSlot(0);
+      showToast('📂 保存した進行を呼び出しました');
+    }
+
+    function deleteIdea(id) {
+      const saved = JSON.parse(localStorage.getItem('river130_composer_ideas_v2') || '[]');
+      const filtered = saved.filter(i => i.id !== id);
+      localStorage.setItem('river130_composer_ideas_v2', JSON.stringify(filtered));
+      renderSavedList();
+    }
+
+    function copyPrompt() {
+      const text = document.getElementById('aiPromptOutput').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 AI音楽生成プロンプトをコピーしました');
+      });
+    }
+
+    function shareApp() {
+      const url = window.location.href;
+      const shareText = `インスタコードの数字譜で作曲・リズム伴奏・6弦ストロムパッド試奏ができる無料Webアプリ「インスタコード作曲スタジオ」\n${url}`;
+      if (navigator.share) {
+        navigator.share({ title: 'インスタコード作曲スタジオ', text: shareText, url: url }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(shareText).then(() => {
+          showToast('🔗 シェア用テキスト＆URLをコピーしました');
+        });
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('opacity-0');
+      setTimeout(() => t.classList.add('opacity-0'), 2300);
+    }
+
+    document.getElementById('keySelect').addEventListener('change', () => {
+      renderSlots();
+      if (!isPlaying) playSlot(0);
+    });
+    document.getElementById('bpmInput').addEventListener('change', updatePrompt);
+
+    renderSlots();
+    renderSavedList();
+  </script>
+</body>
+</html>
