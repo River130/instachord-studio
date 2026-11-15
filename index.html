@@ -210,11 +210,17 @@
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 class="text-sm sm:text-base font-bold text-amber-400">③ 仮想インスタコード実機（左：コード押さえ ／ 右：縦6本弦パッド）</h2>
-          <p class="text-xs text-slate-400">左でコード（数字＋修飾）を選び、右の縦に並んだ6つの横長パッドを上から下へなぞる（またはタップ）して弾きます</p>
+          <p class="text-xs text-slate-400">左でコード（数字＋修飾）を選び、右の縦に並んだ6つの横長パッドをなぞる（またはタップ）して弾きます</p>
         </div>
-        <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-amber-500/40">
-          <span class="text-[11px] text-slate-400 font-bold">選択中コード:</span>
-          <span id="activePadChordLabel" class="mono text-sm sm:text-base font-black text-amber-300">Cmaj7 [ 1 ]</span>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="flex items-center gap-1.5 text-xs font-bold text-emerald-300 cursor-pointer select-none bg-slate-800/90 px-3 py-1.5 rounded-xl border border-emerald-500/40 hover:bg-slate-800 transition">
+            <input id="autoStrumOnBtnCheck" type="checkbox" class="accent-emerald-500 w-3.5 h-3.5" />
+            <span>🎸 ボタン押下時に自動ジャラーン</span>
+          </label>
+          <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-amber-500/40">
+            <span class="text-[11px] text-slate-400 font-bold">選択中:</span>
+            <span id="activePadChordLabel" class="mono text-sm sm:text-base font-black text-amber-300">Cmaj7 [ 1 ]</span>
+          </div>
         </div>
       </div>
 
@@ -627,25 +633,24 @@
       const rootMidi = 48 + noteIndex;
       const intervals = CHORD_TYPES[chordType].intervals;
 
-      // 6本の弦パッド用（上から6弦=低音ルート → 1弦=高音までの6音ボイシング）
       let sixStrings = [];
       if (intervals.length === 3) {
         sixStrings = [
-          rootMidi - 12,                 // 6弦（ルート低音）
-          rootMidi - 12 + intervals[2],  // 5弦（5度）
-          rootMidi,                      // 4弦（ルート中音）
-          rootMidi + intervals[1],       // 3弦（3度/4度）
-          rootMidi + intervals[2],       // 2弦（5度）
-          rootMidi + 12                  // 1弦（ルート高音）
+          rootMidi - 12,
+          rootMidi - 12 + intervals[2],
+          rootMidi,
+          rootMidi + intervals[1],
+          rootMidi + intervals[2],
+          rootMidi + 12
         ];
       } else {
         sixStrings = [
-          rootMidi - 12,                 // 6弦（ルート低音）
-          rootMidi,                      // 5弦（ルート中音）
-          rootMidi + intervals[1],       // 4弦（3度）
-          rootMidi + intervals[2],       // 3弦（5度）
-          rootMidi + intervals[3],       // 2弦（7度）
-          rootMidi + 12                  // 1弦（ルート高音）
+          rootMidi - 12,
+          rootMidi,
+          rootMidi + intervals[1],
+          rootMidi + intervals[2],
+          rootMidi + intervals[3],
+          rootMidi + 12
         ];
       }
 
@@ -755,7 +760,9 @@
         if (modKey === '7' && padMods['7']) padMods.dim = false;
       }
       renderInstaChordRealSimulator();
-      strumAllStrings();
+      if (document.getElementById('autoStrumOnBtnCheck').checked) {
+        strumAllStrings();
+      }
     }
 
     function resetPadModifiers() {
@@ -838,7 +845,9 @@
         bEl.onclick = () => {
           selectedPadNum = btn.num;
           renderInstaChordRealSimulator();
-          strumAllStrings();
+          if (document.getElementById('autoStrumOnBtnCheck').checked) {
+            strumAllStrings();
+          }
         };
         btnContainer.appendChild(bEl);
       });
@@ -871,7 +880,6 @@
       }
     }
 
-    // 指・マウスで縦に並んだ6つの横長パッドをなぞった（スワイプした）時の連続発音
     document.addEventListener('pointermove', (e) => {
       if (!isStrummingPointer) return;
       const target = document.elementFromPoint(e.clientX, e.clientY);
