@@ -75,11 +75,11 @@
           <option value="cello">🎻 重厚チェロ / パッド</option>
           <option value="synth">🎛️ アンビエント</option>
         </select>
-        <select id="reverbSelect" onchange="updateReverbSetting()" class="bg-slate-900 text-xs sm:text-sm text-purple-300 font-bold px-2 py-1.5 rounded-lg border border-purple-500/40 focus:outline-none">
-          <option value="off">🌌 リバーブ: OFF</option>
-          <option value="room">🏠 ルーム (自然な部屋)</option>
-          <option value="hall" selected>🏛️ ホール (豊かな残響)</option>
-          <option value="dark">🌑 深淵ダーク (長残響)</option>
+        <select id="reverbSelect" onchange="onReverbChange()" class="bg-slate-900 text-xs sm:text-sm text-purple-300 font-bold px-2 py-1.5 rounded-lg border border-purple-500/50 focus:outline-none">
+          <option value="off">🌌 リバーブ: OFF (原音)</option>
+          <option value="room">🏠 ルーム (木の部屋)</option>
+          <option value="hall" selected>🏛️ ホール (大残響)</option>
+          <option value="dark">🌑 深淵ダーク (大聖堂)</option>
         </select>
         <div class="flex items-center gap-1 pl-1.5 border-l border-slate-700">
           <span class="text-[11px] text-slate-400 font-bold">BPM</span>
@@ -370,6 +370,7 @@
     let dryGainNode = null;
     let wetGainNode = null;
     let convolverNode = null;
+    let reverbFilterNode = null;
 
     let isMetroRunning = false;
     let metroTimer = null;
@@ -381,37 +382,65 @@
     let isStrummingPointer = false;
     let lastPluckedString = -1;
 
-    // --- Web Audio API エンジン（ConvolverNode リバーブ内蔵） ---
-    function createImpulseResponse(durationSec, decayRate) {
+    // --- Web Audio API 高密度ステレオリバーブ・エンジン ---
+    function createImpulseResponse(durationSec, decayExponent, preDelaySec = 0.02) {
       const sampleRate = audioCtx.sampleRate;
       const length = Math.floor(sampleRate * durationSec);
+      const preDelaySamples = Math.floor(sampleRate * preDelaySec);
       const impulse = audioCtx.createBuffer(2, length, sampleRate);
+
       for (let channel = 0; channel < 2; channel++) {
         const channelData = impulse.getChannelData(channel);
         for (let i = 0; i < length; i++) {
-          const env = Math.pow(1 - i / length, decayRate);
-          channelData[i] = (Math.random() * 2 - 1) * env;
+          if (i < preDelaySamples) {
+            channelData[i] = 0;
+            continue;
+          }
+          const t = (i - preDelaySamples) / (length - preDelaySamples);
+          // 初期反射（最初の0.15秒）を厚く残し、後半へ滑らかに減衰させる
+          const earlyBoost = i < sampleRate * 0.15 ? 1.35 : 1.0;
+          const env = Math.pow(1 - t, decayExponent) * earlyBoost;
+          // 左右チャンネルで異なるランダム反射＋わずかな位相ズレで立体感を強調
+          const noise = (Math.random() * 2 - 1);
+          channelData[i] = noise * env;
         }
       }
       return impulse;
     }
 
     function updateReverbSetting() {
-      if (!audioCtx || !wetGainNode || !convolverNode) return;
+      if (!audioCtx || !wetGainNode || !convolverNode || !reverbFilterNode) return;
       const mode = document.getElementById('reverbSelect').value;
       const now = audioCtx.currentTime;
 
       if (mode === 'off') {
-        wetGainNode.gain.setTargetAtTime(0.0, now, 0.03);
+        dryGainNode.gain.setTargetAtTime(1.0, now, 0.02);
+        wetGainNode.gain.setTargetAtTime(0.0, now, 0.02);
       } else if (mode === 'room') {
-        convolverNode.buffer = createImpulseResponse(1.1, 3.0);
-        wetGainNode.gain.setTargetAtTime(0.28, now, 0.03);
+        convolverNode.buffer = createImpulseResponse(1.4, 2.2, 0.015);
+        reverbFilterNode.frequency.setTargetAtTime(3600, now, 0.02);
+        dryGainNode.gain.setTargetAtTime(0.95, now, 0.02);
+        wetGainNode.gain.setTargetAtTime(0.65, now, 0.02);
       } else if (mode === 'hall') {
-        convolverNode.buffer = createImpulseResponse(2.4, 2.2);
-        wetGainNode.gain.setTargetAtTime(0.45, now, 0.03);
+        convolverNode.buffer = createImpulseResponse(3.2, 1.6, 0.03);
+        reverbFilterNode.frequency.setTargetAtTime(2800, now, 0.02);
+        dryGainNode.gain.setTargetAtTime(0.88, now, 0.02);
+        wetGainNode.gain.setTargetAtTime(1.05, now, 0.02);
       } else if (mode === 'dark') {
-        convolverNode.buffer = createImpulseResponse(4.2, 1.5);
-        wetGainNode.gain.setTargetAtTime(0.68, now, 0.03);
+        convolverNode.buffer = createImpulseResponse(5.5, 1.15, 0.045);
+        reverbFilterNode.frequency.setTargetAtTime(1500, now, 0.02);
+        dryGainNode.gain.setTargetAtTime(0.80, now, 0.02);
+        wetGainNode.gain.setTargetAtTime(1.45, now, 0.02);
+      }
+    }
+
+    function onReverbChange() {
+      initAudio();
+      updateReverbSetting();
+      const label = document.getElementById('reverbSelect').selectedOptions[0].text;
+      showToast(`空間音響を「${label}」に切り替えました`);
+      if (!isPlaying) {
+        strumAllStrings();
       }
     }
 
@@ -421,11 +450,16 @@
         dryGainNode = audioCtx.createGain();
         wetGainNode = audioCtx.createGain();
         convolverNode = audioCtx.createConvolver();
+        reverbFilterNode = audioCtx.createBiquadFilter();
 
-        dryGainNode.gain.value = 1.0;
+        reverbFilterNode.type = 'lowpass';
+        reverbFilterNode.frequency.value = 2800;
+
+        dryGainNode.gain.value = 0.88;
         dryGainNode.connect(audioCtx.destination);
 
-        convolverNode.connect(wetGainNode);
+        convolverNode.connect(reverbFilterNode);
+        reverbFilterNode.connect(wetGainNode);
         wetGainNode.connect(audioCtx.destination);
         updateReverbSetting();
       }
@@ -588,7 +622,7 @@
       resetBeatVisual();
     }
 
-    function playNotes(midiNotes, durationSec = 1.2, useStrum = true) {
+    function playNotes(midiNotes, durationSec = 1.4, useStrum = true) {
       initAudio();
       const tone = document.getElementById('toneSelect').value;
       const now = audioCtx.currentTime;
@@ -598,7 +632,7 @@
         const gain = audioCtx.createGain();
         const filter = audioCtx.createBiquadFilter();
 
-        let peakGain = midiNotes.length === 1 ? 0.16 : 0.09;
+        let peakGain = midiNotes.length === 1 ? 0.17 : 0.095;
         let attack = 0.015;
         let release = durationSec;
         let strumDelay = useStrum ? idx * 0.032 : 0;
@@ -606,25 +640,25 @@
         if (tone === 'pluck') {
           osc.type = 'triangle';
           filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(2500, now);
+          filter.frequency.setValueAtTime(2600, now);
           attack = 0.008;
           strumDelay = useStrum ? idx * 0.035 : 0;
         } else if (tone === 'epiano') {
           osc.type = 'triangle';
           filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(1750, now);
+          filter.frequency.setValueAtTime(1850, now);
           attack = 0.018;
         } else if (tone === 'cello') {
           osc.type = 'sawtooth';
           filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(680, now);
+          filter.frequency.setValueAtTime(720, now);
           attack = 0.18;
           peakGain *= 0.85;
           strumDelay = useStrum ? idx * 0.015 : 0;
         } else if (tone === 'synth') {
           osc.type = 'sine';
           filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(1250, now);
+          filter.frequency.setValueAtTime(1350, now);
           attack = 0.12;
         }
 
@@ -640,7 +674,7 @@
         gain.connect(convolverNode);
 
         osc.start(now + strumDelay);
-        osc.stop(now + strumDelay + release + 0.05);
+        osc.stop(now + strumDelay + release + 0.15);
       });
     }
 
@@ -836,7 +870,7 @@
       const currentMod = getCurrentPadModString();
       const info = resolveSlotInfo({ num: selectedPadNum, mod: currentMod });
       const midi = info.midiNotes[strIdx];
-      playNotes([midi], 1.1, false);
+      playNotes([midi], 1.25, false);
 
       const padEl = document.getElementById(`string-pad-${strIdx}`);
       if (padEl) {
@@ -848,7 +882,7 @@
     function strumAllStrings() {
       const currentMod = getCurrentPadModString();
       const info = resolveSlotInfo({ num: selectedPadNum, mod: currentMod });
-      playNotes(info.midiNotes, 1.4, true);
+      playNotes(info.midiNotes, 1.5, true);
 
       for (let i = 0; i < 6; i++) {
         setTimeout(() => {
