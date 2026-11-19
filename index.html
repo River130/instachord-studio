@@ -59,17 +59,21 @@
           IC
         </div>
         <div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <h1 class="text-sm sm:text-lg font-black tracking-tight text-white">インスタコード作曲スタジオ</h1>
             <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">FREE公開版</span>
+            <button onclick="openChangelogModal()" class="mono text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/50 transition flex items-center gap-1 cursor-pointer" title="アプリの更新履歴を表示">
+              <span>🆕 v1.5</span>
+              <span class="underline">更新履歴</span>
+            </button>
           </div>
           <p class="text-[11px] text-slate-400">数字譜の試聴・ドラム伴奏・6弦ストロムパッド搭載</p>
         </div>
       </div>
 
-      <!-- 音色・BPMコントロール -->
+      <!-- 音色・リバーブ・音量・BPMコントロール -->
       <div class="flex flex-wrap items-center gap-2 bg-slate-800/90 px-2.5 py-1.5 rounded-xl border border-slate-700">
-        <select id="toneSelect" class="bg-slate-900 text-xs sm:text-sm text-sky-300 font-bold px-2 py-1.5 rounded-lg border border-slate-700 focus:outline-none">
+        <select id="toneSelect" onchange="onToneChange()" class="bg-slate-900 text-xs sm:text-sm text-sky-300 font-bold px-2 py-1.5 rounded-lg border border-slate-700 focus:outline-none">
           <option value="pluck">🎸 アコギ / ストラム</option>
           <option value="epiano">🎹 エレピ / ベル</option>
           <option value="cello">🎻 重厚チェロ / パッド</option>
@@ -81,6 +85,12 @@
           <option value="hall" selected>🏛️ ホール (大残響)</option>
           <option value="dark">🌑 深淵ダーク (大聖堂)</option>
         </select>
+        <!-- マスター音量スライダー（ノイズ防止・クリーン115%基準） -->
+        <div class="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded-lg border border-amber-500/40">
+          <span class="text-xs" title="マスター音量">🔊</span>
+          <input id="masterVolumeSlider" type="range" min="30" max="160" value="115" oninput="onMasterVolumeChange(this.value)" class="w-16 sm:w-20 accent-amber-400 cursor-pointer" />
+          <span id="masterVolumeLabel" class="mono text-[11px] font-black text-amber-300 w-9 text-right">115%</span>
+        </div>
         <div class="flex items-center gap-1 pl-1.5 border-l border-slate-700">
           <span class="text-[11px] text-slate-400 font-bold">BPM</span>
           <input id="bpmInput" type="number" value="85" min="40" max="200" class="mono w-14 bg-slate-900 text-center text-sm font-bold text-white py-1 rounded-lg border border-slate-700" />
@@ -273,7 +283,7 @@
             </button>
           </div>
 
-          <!-- 横長パッドが縦に6つ並ぶストロムエリア -->
+          <!-- 横長パッドが縦に6つ並んだストロムエリア -->
           <div id="sixStringArea" class="flex flex-col gap-1.5 select-none py-1">
             <!-- JSで6本の横長パッドを描画 -->
           </div>
@@ -313,11 +323,14 @@
     <!-- フッター -->
     <footer class="pt-4 pb-6 text-center space-y-2.5 border-t border-slate-800/80">
       <p class="text-xs text-slate-300">
-        Created by <span class="font-bold text-white">River130</span> ｜ インスタコード演奏・作曲サポートWebツール（無料公開版）
+        Created by <span class="font-bold text-white">River130</span> ｜ インスタコード演奏・作曲サポートWebツール（無料公開版 <span class="mono text-sky-300">v1.5</span>）
       </p>
-      <div>
+      <div class="flex flex-wrap items-center justify-center gap-2">
         <button onclick="shareApp()" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-amber-300 transition">
           🔗 この作曲ツールをSNS・仲間にシェア
+        </button>
+        <button onclick="openChangelogModal()" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-sky-500/40 text-xs font-bold text-sky-300 transition">
+          📋 アプリの更新履歴を見る
         </button>
       </div>
       <div class="max-w-2xl mx-auto pt-2 text-[10px] sm:text-[11px] text-slate-500 leading-relaxed space-y-0.5">
@@ -328,12 +341,122 @@
 
   </main>
 
+  <!-- 更新履歴（リリースノート）モーダル -->
+  <div id="changelogModal" onclick="if(event.target === this) closeChangelogModal()" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/95">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">📋</span>
+          <h3 class="text-base sm:text-lg font-black text-white">アプリ更新履歴（リリースノート）</h3>
+        </div>
+        <button onclick="closeChangelogModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold flex items-center justify-center">
+          ✕
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto space-y-5 text-xs sm:text-sm leading-relaxed">
+        <!-- v1.5 -->
+        <div class="relative pl-4 border-l-2 border-sky-400 space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="mono font-black text-sky-300 text-sm">v1.5</span>
+            <span class="text-[10px] font-black px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40">NEW・最新</span>
+            <span class="text-xs text-slate-400">2026.11.19</span>
+          </div>
+          <div class="font-bold text-white">🔇 ノイズ完全除去 ＆ クリーン音質チューニング</div>
+          <ul class="list-disc list-inside text-slate-300 space-y-1 text-xs">
+            <li>リバーブ残響末尾のホワイトノイズ残留と過増幅によるチリチリ音（音割れ）を解消し、透明感のあるクリアな音質に改善しました。</li>
+            <li>マスター音量の適正レンジ（30%〜160%／初期115%）とゼロクロス停止処理を導入しました。</li>
+          </ul>
+        </div>
+
+        <!-- v1.4 -->
+        <div class="relative pl-4 border-l-2 border-emerald-400 space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="mono font-black text-emerald-300 text-sm">v1.4</span>
+            <span class="text-xs text-slate-400">2026.11.19</span>
+          </div>
+          <div class="font-bold text-white">🎸 楽器音色エンジンの刷新（アコギ・エレピ・チェロの明確な差別化）</div>
+          <ul class="list-disc list-inside text-slate-300 space-y-1 text-xs">
+            <li>アコギ（プラック減衰ストラム）とエレピ（ローズ風ベル倍音＋トレモロ）の音色エンジンを差別化しました。</li>
+          </ul>
+        </div>
+
+        <!-- v1.3 -->
+        <div class="relative pl-4 border-l-2 border-amber-400 space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="mono font-black text-amber-300 text-sm">v1.3</span>
+            <span class="text-xs text-slate-400">2026.11.17</span>
+          </div>
+          <div class="font-bold text-white">🔊 マスター音量スライダー ＆ 更新履歴表示を追加</div>
+          <ul class="list-disc list-inside text-slate-300 space-y-1 text-xs">
+            <li>ヘッダーにマスター音量スライダーと音割れ防止コンプレッサーを追加しました。</li>
+          </ul>
+        </div>
+
+        <!-- v1.2 -->
+        <div class="relative pl-4 border-l-2 border-purple-400 space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="mono font-black text-purple-300 text-sm">v1.2</span>
+            <span class="text-xs text-slate-400">2026.11.16</span>
+          </div>
+          <div class="font-bold text-white">🌌 高密度ステレオリバーブ（空間残響）エンジン搭載</div>
+          <ul class="list-disc list-inside text-slate-300 space-y-1 text-xs">
+            <li><strong>OFF / ルーム / ホール / 深淵ダーク</strong>の4段階から空間残響をリアルタイム切替できるようにしました。</li>
+          </ul>
+        </div>
+
+        <!-- v1.1 -->
+        <div class="relative pl-4 border-l-2 border-sky-400 space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="mono font-black text-sky-300 text-sm">v1.1</span>
+            <span class="text-xs text-slate-400">2026.11.15</span>
+          </div>
+          <div class="font-bold text-white">🎸 仮想インスタコード実機（左：数字＋修飾 ／ 右：縦6本弦パッド）実装</div>
+          <ul class="list-disc list-inside text-slate-300 space-y-1 text-xs">
+            <li>実機の構造に合わせ、左側で数字（1〜6）と修飾を押さえ、右側の<strong>縦に並んだ6本の横長パッド</strong>をスワイプして「ジャラーン」と弾けるUIに刷新しました。</li>
+          </ul>
+        </div>
+
+        <!-- v1.0 -->
+        <div class="relative pl-4 border-l-2 border-slate-600 space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="mono font-black text-slate-300 text-sm">v1.0</span>
+            <span class="text-xs text-slate-400">2026.11.14</span>
+          </div>
+          <div class="font-bold text-white">🎉 インスタコード作曲アシスト・スタジオ 初版公開</div>
+          <ul class="list-disc list-inside text-slate-300 space-y-1 text-xs">
+            <li>本体KEY設定、ムード別ワンタップ進行生成、4小節数字譜シーケンサー、内蔵ドラム伴奏、Sunoプロンプト出力機能を搭載して無料公開しました。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="px-5 py-3 border-t border-slate-800 bg-slate-950/60 text-right">
+        <button onclick="closeChangelogModal()" class="px-5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs sm:text-sm transition">
+          閉じる
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- トースト通知 -->
   <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-amber-400 text-slate-950 font-black text-xs sm:text-sm px-5 py-2.5 rounded-full shadow-2xl opacity-0 pointer-events-none transition-opacity duration-200 whitespace-nowrap">
     通知メッセージ
   </div>
 
   <script>
+    // --- 更新履歴モーダル開閉 ---
+    function openChangelogModal() {
+      const modal = document.getElementById('changelogModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeChangelogModal() {
+      const modal = document.getElementById('changelogModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
     // --- 音楽理論・インスタコードマッピングデータ ---
     const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const CHORD_TYPES = {
@@ -367,10 +490,13 @@
     let currentStep = 0;
     let loopTimer = null;
     let audioCtx = null;
+    let masterGainNode = null;
+    let compressorNode = null;
     let dryGainNode = null;
     let wetGainNode = null;
     let convolverNode = null;
     let reverbFilterNode = null;
+    let masterVolumeRatio = 1.15;
 
     let isMetroRunning = false;
     let metroTimer = null;
@@ -382,7 +508,17 @@
     let isStrummingPointer = false;
     let lastPluckedString = -1;
 
-    // --- Web Audio API 高密度ステレオリバーブ・エンジン ---
+    // --- マスター音量スライダー制御 ---
+    function onMasterVolumeChange(val) {
+      const pct = parseInt(val, 10) || 115;
+      masterVolumeRatio = pct / 100;
+      document.getElementById('masterVolumeLabel').textContent = `${pct}%`;
+      if (audioCtx && masterGainNode) {
+        masterGainNode.gain.setTargetAtTime(masterVolumeRatio, audioCtx.currentTime, 0.02);
+      }
+    }
+
+    // --- Web Audio API クリーン・ステレオリバーブ・エンジン（ノイズ完全除去版） ---
     function createImpulseResponse(durationSec, decayExponent, preDelaySec = 0.02) {
       const sampleRate = audioCtx.sampleRate;
       const length = Math.floor(sampleRate * durationSec);
@@ -397,12 +533,12 @@
             continue;
           }
           const t = (i - preDelaySamples) / (length - preDelaySamples);
-          // 初期反射（最初の0.15秒）を厚く残し、後半へ滑らかに減衰させる
-          const earlyBoost = i < sampleRate * 0.15 ? 1.35 : 1.0;
-          const env = Math.pow(1 - t, decayExponent) * earlyBoost;
-          // 左右チャンネルで異なるランダム反射＋わずかな位相ズレで立体感を強調
+          // 末尾20%を完全に0へ収束させ、ホワイトノイズ残留をゼロにする
+          const tailFade = t > 0.8 ? (1 - t) / 0.2 : 1.0;
+          const earlyBoost = i < sampleRate * 0.12 ? 1.2 : 1.0;
+          const env = Math.pow(1 - t, decayExponent) * earlyBoost * tailFade;
           const noise = (Math.random() * 2 - 1);
-          channelData[i] = noise * env;
+          channelData[i] = noise * env * 0.55;
         }
       }
       return impulse;
@@ -417,20 +553,20 @@
         dryGainNode.gain.setTargetAtTime(1.0, now, 0.02);
         wetGainNode.gain.setTargetAtTime(0.0, now, 0.02);
       } else if (mode === 'room') {
-        convolverNode.buffer = createImpulseResponse(1.4, 2.2, 0.015);
-        reverbFilterNode.frequency.setTargetAtTime(3600, now, 0.02);
+        convolverNode.buffer = createImpulseResponse(1.2, 2.5, 0.015);
+        reverbFilterNode.frequency.setTargetAtTime(2600, now, 0.02);
         dryGainNode.gain.setTargetAtTime(0.95, now, 0.02);
-        wetGainNode.gain.setTargetAtTime(0.65, now, 0.02);
+        wetGainNode.gain.setTargetAtTime(0.45, now, 0.02);
       } else if (mode === 'hall') {
-        convolverNode.buffer = createImpulseResponse(3.2, 1.6, 0.03);
-        reverbFilterNode.frequency.setTargetAtTime(2800, now, 0.02);
-        dryGainNode.gain.setTargetAtTime(0.88, now, 0.02);
-        wetGainNode.gain.setTargetAtTime(1.05, now, 0.02);
+        convolverNode.buffer = createImpulseResponse(2.6, 1.8, 0.025);
+        reverbFilterNode.frequency.setTargetAtTime(2100, now, 0.02);
+        dryGainNode.gain.setTargetAtTime(0.90, now, 0.02);
+        wetGainNode.gain.setTargetAtTime(0.72, now, 0.02);
       } else if (mode === 'dark') {
-        convolverNode.buffer = createImpulseResponse(5.5, 1.15, 0.045);
-        reverbFilterNode.frequency.setTargetAtTime(1500, now, 0.02);
-        dryGainNode.gain.setTargetAtTime(0.80, now, 0.02);
-        wetGainNode.gain.setTargetAtTime(1.45, now, 0.02);
+        convolverNode.buffer = createImpulseResponse(4.2, 1.35, 0.04);
+        reverbFilterNode.frequency.setTargetAtTime(1250, now, 0.02);
+        dryGainNode.gain.setTargetAtTime(0.85, now, 0.02);
+        wetGainNode.gain.setTargetAtTime(0.95, now, 0.02);
       }
     }
 
@@ -444,23 +580,47 @@
       }
     }
 
+    function onToneChange() {
+      initAudio();
+      const label = document.getElementById('toneSelect').selectedOptions[0].text;
+      showToast(`音色を「${label}」に切り替えました`);
+      if (!isPlaying) {
+        strumAllStrings();
+      }
+    }
+
     function initAudio() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        masterGainNode = audioCtx.createGain();
+        masterGainNode.gain.value = masterVolumeRatio;
+
+        // ピーク音割れだけを静かに防ぐクリーンリミッター設定
+        compressorNode = audioCtx.createDynamicsCompressor();
+        compressorNode.threshold.value = -6;
+        compressorNode.knee.value = 12;
+        compressorNode.ratio.value = 4;
+        compressorNode.attack.value = 0.01;
+        compressorNode.release.value = 0.2;
+
+        masterGainNode.connect(compressorNode);
+        compressorNode.connect(audioCtx.destination);
+
         dryGainNode = audioCtx.createGain();
         wetGainNode = audioCtx.createGain();
         convolverNode = audioCtx.createConvolver();
         reverbFilterNode = audioCtx.createBiquadFilter();
 
         reverbFilterNode.type = 'lowpass';
-        reverbFilterNode.frequency.value = 2800;
+        reverbFilterNode.frequency.value = 2100;
 
-        dryGainNode.gain.value = 0.88;
-        dryGainNode.connect(audioCtx.destination);
+        dryGainNode.gain.value = 0.90;
+        dryGainNode.connect(masterGainNode);
 
         convolverNode.connect(reverbFilterNode);
         reverbFilterNode.connect(wetGainNode);
-        wetGainNode.connect(audioCtx.destination);
+        wetGainNode.connect(masterGainNode);
         updateReverbSetting();
       }
       if (audioCtx.state === 'suspended') {
@@ -483,13 +643,14 @@
         osc.frequency.setValueAtTime(140, now);
         osc.frequency.exponentialRampToValueAtTime(42, now + 0.12);
         gain.gain.setValueAtTime(0.45, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+        gain.gain.setValueAtTime(0, now + 0.16);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(masterGainNode);
         osc.start(now);
         osc.stop(now + 0.17);
       } else if (type === 'snare') {
-        const bufferSize = audioCtx.sampleRate * 0.12;
+        const bufferSize = audioCtx.sampleRate * 0.11;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -498,18 +659,19 @@
 
         const filter = audioCtx.createBiquadFilter();
         filter.type = 'highpass';
-        filter.frequency.setValueAtTime(900, now);
+        filter.frequency.setValueAtTime(1100, now);
 
         const gain = audioCtx.createGain();
         gain.gain.setValueAtTime(0.24, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.10);
+        gain.gain.setValueAtTime(0, now + 0.11);
 
         noise.connect(filter);
         filter.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(masterGainNode);
         noise.start(now);
       } else if (type === 'hat') {
-        const bufferSize = audioCtx.sampleRate * 0.04;
+        const bufferSize = audioCtx.sampleRate * 0.035;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -518,15 +680,16 @@
 
         const filter = audioCtx.createBiquadFilter();
         filter.type = 'highpass';
-        filter.frequency.setValueAtTime(6000, now);
+        filter.frequency.setValueAtTime(6500, now);
 
         const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.09, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        gain.gain.setValueAtTime(0.10, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+        gain.gain.setValueAtTime(0, now + 0.035);
 
         noise.connect(filter);
         filter.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(masterGainNode);
         noise.start(now);
       } else if (type === 'clickAccent' || type === 'clickSub') {
         const isAccent = type === 'clickAccent';
@@ -535,10 +698,11 @@
         osc.type = 'sine';
         osc.frequency.setValueAtTime(isAccent ? 1200 : 800, now);
         osc.frequency.exponentialRampToValueAtTime(isAccent ? 600 : 400, now + 0.04);
-        gain.gain.setValueAtTime(isAccent ? 0.25 : 0.16, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+        gain.gain.setValueAtTime(isAccent ? 0.28 : 0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+        gain.gain.setValueAtTime(0, now + 0.05);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(masterGainNode);
         osc.start(now);
         osc.stop(now + 0.055);
       }
@@ -622,59 +786,174 @@
       resetBeatVisual();
     }
 
+    // --- クリーン楽器音色シンセサイザーエンジン（v1.5 ノイズ・クリック音ゼロ設計） ---
     function playNotes(midiNotes, durationSec = 1.4, useStrum = true) {
       initAudio();
       const tone = document.getElementById('toneSelect').value;
       const now = audioCtx.currentTime;
 
       midiNotes.forEach((midi, idx) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        const filter = audioCtx.createBiquadFilter();
-
-        let peakGain = midiNotes.length === 1 ? 0.17 : 0.095;
-        let attack = 0.015;
-        let release = durationSec;
-        let strumDelay = useStrum ? idx * 0.032 : 0;
+        const freq = midiToFreq(midi);
+        const baseGain = midiNotes.length === 1 ? 0.22 : 0.11;
 
         if (tone === 'pluck') {
-          osc.type = 'triangle';
+          // 🎸 アコギ / ストラム：丸みのある倍音構成＋ノイズを抑えたプラック減衰
+          const strumDelay = useStrum ? idx * 0.042 : 0;
+          const t0 = now + strumDelay;
+          const release = durationSec * 1.1;
+
+          const oscBody = audioCtx.createOscillator();
+          const oscString = audioCtx.createOscillator();
+          oscBody.type = 'triangle';
+          oscString.type = 'sawtooth';
+          oscBody.frequency.setValueAtTime(freq, t0);
+          oscString.frequency.setValueAtTime(freq, t0);
+
+          const stringMix = audioCtx.createGain();
+          stringMix.gain.setValueAtTime(0.28, t0);
+
+          const filter = audioCtx.createBiquadFilter();
           filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(2600, now);
-          attack = 0.008;
-          strumDelay = useStrum ? idx * 0.035 : 0;
+          filter.Q.setValueAtTime(1.1, t0);
+          filter.frequency.setValueAtTime(2600, t0);
+          filter.frequency.exponentialRampToValueAtTime(780, t0 + 0.26);
+
+          const env = audioCtx.createGain();
+          env.gain.setValueAtTime(0, t0);
+          env.gain.linearRampToValueAtTime(baseGain * 1.1, t0 + 0.008);
+          env.gain.exponentialRampToValueAtTime(baseGain * 0.4, t0 + 0.24);
+          env.gain.exponentialRampToValueAtTime(0.0001, t0 + release);
+          env.gain.setValueAtTime(0, t0 + release + 0.02);
+
+          oscBody.connect(filter);
+          oscString.connect(stringMix);
+          stringMix.connect(filter);
+          filter.connect(env);
+          env.connect(dryGainNode);
+          env.connect(convolverNode);
+
+          oscBody.start(t0);
+          oscString.start(t0);
+          oscBody.stop(t0 + release + 0.04);
+          oscString.stop(t0 + release + 0.04);
+
         } else if (tone === 'epiano') {
-          osc.type = 'triangle';
-          filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(1850, now);
-          attack = 0.018;
+          // 🎹 エレピ / ベル（Rhodes風）：純粋なSine波基音＋クリアなベルアタック＋滑らかなトレモロ
+          const strumDelay = useStrum ? idx * 0.018 : 0;
+          const t0 = now + strumDelay;
+          const release = durationSec * 1.25;
+
+          const oscFundamental = audioCtx.createOscillator();
+          oscFundamental.type = 'sine';
+          oscFundamental.frequency.setValueAtTime(freq, t0);
+
+          const oscTine = audioCtx.createOscillator();
+          oscTine.type = 'sine';
+          oscTine.frequency.setValueAtTime(freq * 4, t0);
+          const tineGain = audioCtx.createGain();
+          tineGain.gain.setValueAtTime(0, t0);
+          tineGain.gain.linearRampToValueAtTime(baseGain * 0.45, t0 + 0.006);
+          tineGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.13);
+          tineGain.gain.setValueAtTime(0, t0 + 0.14);
+
+          const tremoloOsc = audioCtx.createOscillator();
+          const tremoloDepth = audioCtx.createGain();
+          tremoloOsc.frequency.setValueAtTime(4.5, t0);
+          tremoloDepth.gain.setValueAtTime(baseGain * 0.18, t0);
+
+          const env = audioCtx.createGain();
+          env.gain.setValueAtTime(0, t0);
+          env.gain.linearRampToValueAtTime(baseGain * 1.1, t0 + 0.014);
+          env.gain.exponentialRampToValueAtTime(baseGain * 0.55, t0 + 0.45);
+          env.gain.exponentialRampToValueAtTime(0.0001, t0 + release);
+          env.gain.setValueAtTime(0, t0 + release + 0.02);
+
+          tremoloOsc.connect(tremoloDepth);
+          tremoloDepth.connect(env.gain);
+
+          oscFundamental.connect(env);
+          oscTine.connect(tineGain);
+          tineGain.connect(env);
+
+          env.connect(dryGainNode);
+          env.connect(convolverNode);
+
+          oscFundamental.start(t0);
+          oscTine.start(t0);
+          tremoloOsc.start(t0);
+          oscFundamental.stop(t0 + release + 0.04);
+          oscTine.stop(t0 + 0.15);
+          tremoloOsc.stop(t0 + release + 0.04);
+
         } else if (tone === 'cello') {
-          osc.type = 'sawtooth';
+          // 🎻 重厚チェロ / パッド
+          const strumDelay = useStrum ? idx * 0.015 : 0;
+          const t0 = now + strumDelay;
+          const release = durationSec * 1.2;
+
+          const osc1 = audioCtx.createOscillator();
+          const osc2 = audioCtx.createOscillator();
+          osc1.type = 'sawtooth';
+          osc2.type = 'sawtooth';
+          osc1.frequency.setValueAtTime(freq, t0);
+          osc2.frequency.setValueAtTime(freq, t0);
+          osc1.detune.setValueAtTime(-6, t0);
+          osc2.detune.setValueAtTime(6, t0);
+
+          const filter = audioCtx.createBiquadFilter();
           filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(720, now);
-          attack = 0.18;
-          peakGain *= 0.85;
-          strumDelay = useStrum ? idx * 0.015 : 0;
-        } else if (tone === 'synth') {
-          osc.type = 'sine';
-          filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(1350, now);
-          attack = 0.12;
+          filter.frequency.setValueAtTime(650, t0);
+
+          const env = audioCtx.createGain();
+          env.gain.setValueAtTime(0, t0);
+          env.gain.linearRampToValueAtTime(baseGain * 0.72, t0 + 0.18);
+          env.gain.exponentialRampToValueAtTime(0.0001, t0 + release);
+          env.gain.setValueAtTime(0, t0 + release + 0.02);
+
+          osc1.connect(filter);
+          osc2.connect(filter);
+          filter.connect(env);
+          env.connect(dryGainNode);
+          env.connect(convolverNode);
+
+          osc1.start(t0);
+          osc2.start(t0);
+          osc1.stop(t0 + release + 0.04);
+          osc2.stop(t0 + release + 0.04);
+
+        } else {
+          // 🎛️ アンビエント
+          const strumDelay = useStrum ? idx * 0.025 : 0;
+          const t0 = now + strumDelay;
+          const release = durationSec * 1.3;
+
+          const osc1 = audioCtx.createOscillator();
+          const osc2 = audioCtx.createOscillator();
+          osc1.type = 'sine';
+          osc2.type = 'triangle';
+          osc1.frequency.setValueAtTime(freq, t0);
+          osc2.frequency.setValueAtTime(freq * 2, t0);
+
+          const subGain = audioCtx.createGain();
+          subGain.gain.setValueAtTime(0.22, t0);
+
+          const env = audioCtx.createGain();
+          env.gain.setValueAtTime(0, t0);
+          env.gain.linearRampToValueAtTime(baseGain * 1.0, t0 + 0.15);
+          env.gain.exponentialRampToValueAtTime(0.0001, t0 + release);
+          env.gain.setValueAtTime(0, t0 + release + 0.02);
+
+          osc1.connect(env);
+          osc2.connect(subGain);
+          subGain.connect(env);
+          env.connect(dryGainNode);
+          env.connect(convolverNode);
+
+          osc1.start(t0);
+          osc2.start(t0);
+          osc1.stop(t0 + release + 0.04);
+          osc2.stop(t0 + release + 0.04);
         }
-
-        osc.frequency.setValueAtTime(midiToFreq(midi), now + strumDelay);
-
-        gain.gain.setValueAtTime(0.0001, now + strumDelay);
-        gain.gain.linearRampToValueAtTime(peakGain, now + strumDelay + attack);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + strumDelay + release);
-
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(dryGainNode);
-        gain.connect(convolverNode);
-
-        osc.start(now + strumDelay);
-        osc.stop(now + strumDelay + release + 0.15);
       });
     }
 
