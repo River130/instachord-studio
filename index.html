@@ -7,6 +7,10 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
+    html, body {
+      overscroll-behavior-y: none;
+      overflow-x: hidden;
+    }
     body {
       font-family: 'Noto Sans JP', sans-serif;
       background-color: #0f172a;
@@ -20,9 +24,18 @@
       box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
       background-color: #1e293b !important;
     }
+    .ic-btn {
+      touch-action: manipulation;
+    }
     .ic-btn:active {
       transform: scale(0.95);
       filter: brightness(1.25);
+    }
+    .play-lock-zone {
+      touch-action: none;
+      overscroll-behavior: none;
+      user-select: none;
+      -webkit-user-select: none;
     }
     .string-pad {
       transition: transform 0.06s ease, background-color 0.08s ease, box-shadow 0.08s ease;
@@ -63,7 +76,7 @@
             <h1 class="text-sm sm:text-lg font-black tracking-tight text-white">インスタコード作曲スタジオ</h1>
             <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">FREE公開版</span>
             <button onclick="openChangelogModal()" class="mono text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/50 transition flex items-center gap-1 cursor-pointer" title="アプリの更新履歴を表示">
-              <span>🆕 v1.5</span>
+              <span>🆕 v1.6</span>
               <span class="underline">更新履歴</span>
             </button>
           </div>
@@ -244,26 +257,26 @@
       <div class="grid grid-cols-1 md:grid-cols-12 gap-4 bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800">
         
         <!-- 左側（ネック側）：数字ボタン 1〜6 ＆ 修飾ボタン -->
-        <div class="md:col-span-6 flex flex-col justify-between space-y-3">
+        <div class="md:col-span-6 flex flex-col justify-between space-y-3 play-lock-zone">
           <div class="flex items-center justify-between">
             <span class="text-xs font-black text-sky-400">◀ 左手：コード押さえ（数字＋修飾）</span>
-            <button onclick="resetPadModifiers()" class="text-[11px] px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 font-bold">
+            <button onclick="resetPadModifiers()" class="ic-btn text-[11px] px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 font-bold">
               修飾解除
             </button>
           </div>
 
           <!-- 修飾ボタン（〜・7・sus4・dim） -->
           <div class="grid grid-cols-4 gap-1.5">
-            <button id="mod-swap" onclick="toggleModifier('swap')" class="ic-btn py-2 px-1 rounded-xl bg-slate-800 border-2 border-slate-700 text-xs font-black text-slate-200 transition">
+            <button id="mod-swap" onclick="toggleModifier('swap')" class="ic-btn py-2.5 px-1 rounded-xl bg-slate-800 border-2 border-slate-700 text-xs font-black text-slate-200 transition">
               〜<br><span class="text-[9px] font-normal text-slate-400">スワップ</span>
             </button>
-            <button id="mod-7" onclick="toggleModifier('7')" class="ic-btn py-2 px-1 rounded-xl bg-slate-800 border-2 border-slate-700 text-xs font-black text-slate-200 transition">
+            <button id="mod-7" onclick="toggleModifier('7')" class="ic-btn py-2.5 px-1 rounded-xl bg-slate-800 border-2 border-slate-700 text-xs font-black text-slate-200 transition">
               7<br><span class="text-[9px] font-normal text-slate-400">セブンス</span>
             </button>
-            <button id="mod-sus4" onclick="toggleModifier('sus4')" class="ic-btn py-2 px-1 rounded-xl bg-slate-800 border-2 border-slate-700 text-xs font-black text-slate-200 transition">
+            <button id="mod-sus4" onclick="toggleModifier('sus4')" class="ic-btn py-2.5 px-1 rounded-xl bg-slate-800 border-2 border-slate-700 text-xs font-black text-slate-200 transition">
               sus4<br><span class="text-[9px] font-normal text-slate-400">保留音</span>
             </button>
-            <button id="mod-dim" onclick="toggleModifier('dim')" class="ic-btn py-2 px-1 rounded-xl bg-slate-800 border-2 border-slate-700 text-xs font-black text-slate-200 transition">
+            <button id="mod-dim" onclick="toggleModifier('dim')" class="ic-btn py-2.5 px-1 rounded-xl bg-slate-800 border-2 border-slate-700 text-xs font-black text-slate-200 transition">
               dim<br><span class="text-[9px] font-normal text-slate-400">経過音</span>
             </button>
           </div>
@@ -275,16 +288,16 @@
         </div>
 
         <!-- 右側（ボディ側）：縦に6つ並んだ横長パッド（弦の役割） -->
-        <div class="md:col-span-6 flex flex-col justify-between space-y-2 border-t md:border-t-0 md:border-l border-slate-800 pt-3 md:pt-0 md:pl-4">
+        <div class="md:col-span-6 flex flex-col justify-between space-y-2 border-t md:border-t-0 md:border-l border-slate-800 pt-3 md:pt-0 md:pl-4 play-lock-zone">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-black text-amber-400">▶ 右手：6弦パッド（上から下へスワイプ／単音弾き）</span>
-            <button onclick="strumAllStrings()" class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow transition">
+            <span class="text-xs font-black text-amber-400">▶ 右手：6弦パッド（画面固定・なぞり弾き）</span>
+            <button onclick="strumAllStrings()" class="ic-btn px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow transition">
               🎸 ジャラーン（全弦）
             </button>
           </div>
 
-          <!-- 横長パッドが縦に6つ並んだストロムエリア -->
-          <div id="sixStringArea" class="flex flex-col gap-1.5 select-none py-1">
+          <!-- 横長パッドが縦に6つ並んだストロムエリア（画面スクロール完全ロック） -->
+          <div id="sixStringArea" class="flex flex-col gap-1.5 select-none py-1.5 px-1 rounded-xl bg-slate-900/50 play-lock-zone">
             <!-- JSで6本の横長パッドを描画 -->
           </div>
         </div>
@@ -323,7 +336,7 @@
     <!-- フッター -->
     <footer class="pt-4 pb-6 text-center space-y-2.5 border-t border-slate-800/80">
       <p class="text-xs text-slate-300">
-        Created by <span class="font-bold text-white">River130</span> ｜ インスタコード演奏・作曲サポートWebツール（無料公開版 <span class="mono text-sky-300">v1.5</span>）
+        Created by <span class="font-bold text-white">River130</span> ｜ インスタコード演奏・作曲サポートWebツール（無料公開版 <span class="mono text-sky-300">v1.6</span>）
       </p>
       <div class="flex flex-wrap items-center justify-center gap-2">
         <button onclick="shareApp()" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-amber-300 transition">
@@ -355,24 +368,36 @@
       </div>
 
       <div class="p-5 overflow-y-auto space-y-5 text-xs sm:text-sm leading-relaxed">
-        <!-- v1.5 -->
+        <!-- v1.6 -->
         <div class="relative pl-4 border-l-2 border-sky-400 space-y-1.5">
           <div class="flex items-center gap-2">
-            <span class="mono font-black text-sky-300 text-sm">v1.5</span>
+            <span class="mono font-black text-sky-300 text-sm">v1.6</span>
             <span class="text-[10px] font-black px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40">NEW・最新</span>
+            <span class="text-xs text-slate-400">2026.11.20</span>
+          </div>
+          <div class="font-bold text-white">📱 演奏中の画面ズレ・誤スクロール完全防止（タッチ操作ロック）</div>
+          <ul class="list-disc list-inside text-slate-300 space-y-1 text-xs">
+            <li>スマホで6本弦パッドやボタンを演奏中、指の位置が少しズレても画面が上下にスクロールしないよう操作エリアを完全固定しました。</li>
+            <li>指を滑らせた際のタッチ座標判定（touchmove）を補強し、素早いストロム演奏の反応精度を高めました。</li>
+          </ul>
+        </div>
+
+        <!-- v1.5 -->
+        <div class="relative pl-4 border-l-2 border-emerald-400 space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="mono font-black text-emerald-300 text-sm">v1.5</span>
             <span class="text-xs text-slate-400">2026.11.19</span>
           </div>
           <div class="font-bold text-white">🔇 ノイズ完全除去 ＆ クリーン音質チューニング</div>
           <ul class="list-disc list-inside text-slate-300 space-y-1 text-xs">
             <li>リバーブ残響末尾のホワイトノイズ残留と過増幅によるチリチリ音（音割れ）を解消し、透明感のあるクリアな音質に改善しました。</li>
-            <li>マスター音量の適正レンジ（30%〜160%／初期115%）とゼロクロス停止処理を導入しました。</li>
           </ul>
         </div>
 
         <!-- v1.4 -->
-        <div class="relative pl-4 border-l-2 border-emerald-400 space-y-1.5">
+        <div class="relative pl-4 border-l-2 border-amber-400 space-y-1.5">
           <div class="flex items-center gap-2">
-            <span class="mono font-black text-emerald-300 text-sm">v1.4</span>
+            <span class="mono font-black text-amber-300 text-sm">v1.4</span>
             <span class="text-xs text-slate-400">2026.11.19</span>
           </div>
           <div class="font-bold text-white">🎸 楽器音色エンジンの刷新（アコギ・エレピ・チェロの明確な差別化）</div>
@@ -382,9 +407,9 @@
         </div>
 
         <!-- v1.3 -->
-        <div class="relative pl-4 border-l-2 border-amber-400 space-y-1.5">
+        <div class="relative pl-4 border-l-2 border-purple-400 space-y-1.5">
           <div class="flex items-center gap-2">
-            <span class="mono font-black text-amber-300 text-sm">v1.3</span>
+            <span class="mono font-black text-purple-300 text-sm">v1.3</span>
             <span class="text-xs text-slate-400">2026.11.17</span>
           </div>
           <div class="font-bold text-white">🔊 マスター音量スライダー ＆ 更新履歴表示を追加</div>
@@ -394,9 +419,9 @@
         </div>
 
         <!-- v1.2 -->
-        <div class="relative pl-4 border-l-2 border-purple-400 space-y-1.5">
+        <div class="relative pl-4 border-l-2 border-sky-400 space-y-1.5">
           <div class="flex items-center gap-2">
-            <span class="mono font-black text-purple-300 text-sm">v1.2</span>
+            <span class="mono font-black text-sky-300 text-sm">v1.2</span>
             <span class="text-xs text-slate-400">2026.11.16</span>
           </div>
           <div class="font-bold text-white">🌌 高密度ステレオリバーブ（空間残響）エンジン搭載</div>
@@ -406,9 +431,9 @@
         </div>
 
         <!-- v1.1 -->
-        <div class="relative pl-4 border-l-2 border-sky-400 space-y-1.5">
+        <div class="relative pl-4 border-l-2 border-slate-500 space-y-1.5">
           <div class="flex items-center gap-2">
-            <span class="mono font-black text-sky-300 text-sm">v1.1</span>
+            <span class="mono font-black text-slate-300 text-sm">v1.1</span>
             <span class="text-xs text-slate-400">2026.11.15</span>
           </div>
           <div class="font-bold text-white">🎸 仮想インスタコード実機（左：数字＋修飾 ／ 右：縦6本弦パッド）実装</div>
@@ -533,7 +558,6 @@
             continue;
           }
           const t = (i - preDelaySamples) / (length - preDelaySamples);
-          // 末尾20%を完全に0へ収束させ、ホワイトノイズ残留をゼロにする
           const tailFade = t > 0.8 ? (1 - t) / 0.2 : 1.0;
           const earlyBoost = i < sampleRate * 0.12 ? 1.2 : 1.0;
           const env = Math.pow(1 - t, decayExponent) * earlyBoost * tailFade;
@@ -596,7 +620,6 @@
         masterGainNode = audioCtx.createGain();
         masterGainNode.gain.value = masterVolumeRatio;
 
-        // ピーク音割れだけを静かに防ぐクリーンリミッター設定
         compressorNode = audioCtx.createDynamicsCompressor();
         compressorNode.threshold.value = -6;
         compressorNode.knee.value = 12;
@@ -786,7 +809,7 @@
       resetBeatVisual();
     }
 
-    // --- クリーン楽器音色シンセサイザーエンジン（v1.5 ノイズ・クリック音ゼロ設計） ---
+    // --- クリーン楽器音色シンセサイザーエンジン ---
     function playNotes(midiNotes, durationSec = 1.4, useStrum = true) {
       initAudio();
       const tone = document.getElementById('toneSelect').value;
@@ -797,7 +820,6 @@
         const baseGain = midiNotes.length === 1 ? 0.22 : 0.11;
 
         if (tone === 'pluck') {
-          // 🎸 アコギ / ストラム：丸みのある倍音構成＋ノイズを抑えたプラック減衰
           const strumDelay = useStrum ? idx * 0.042 : 0;
           const t0 = now + strumDelay;
           const release = durationSec * 1.1;
@@ -838,7 +860,6 @@
           oscString.stop(t0 + release + 0.04);
 
         } else if (tone === 'epiano') {
-          // 🎹 エレピ / ベル（Rhodes風）：純粋なSine波基音＋クリアなベルアタック＋滑らかなトレモロ
           const strumDelay = useStrum ? idx * 0.018 : 0;
           const t0 = now + strumDelay;
           const release = durationSec * 1.25;
@@ -886,7 +907,6 @@
           tremoloOsc.stop(t0 + release + 0.04);
 
         } else if (tone === 'cello') {
-          // 🎻 重厚チェロ / パッド
           const strumDelay = useStrum ? idx * 0.015 : 0;
           const t0 = now + strumDelay;
           const release = durationSec * 1.2;
@@ -922,7 +942,6 @@
           osc2.stop(t0 + release + 0.04);
 
         } else {
-          // 🎛️ アンビエント
           const strumDelay = useStrum ? idx * 0.025 : 0;
           const t0 = now + strumDelay;
           const release = durationSec * 1.3;
@@ -1230,7 +1249,7 @@
         const pad = document.createElement('div');
         pad.id = `string-pad-${i}`;
         pad.dataset.strIdx = i;
-        pad.className = 'string-pad h-9 sm:h-10 w-full rounded-lg bg-slate-800/95 hover:bg-slate-700 border border-slate-600/80 px-3 flex items-center justify-between cursor-pointer';
+        pad.className = 'string-pad h-10 sm:h-11 w-full rounded-lg bg-slate-800/95 hover:bg-slate-700 border border-slate-600/80 px-3 flex items-center justify-between cursor-pointer';
         pad.innerHTML = `
           <span class="text-[11px] font-bold text-slate-400">${stringLabels[i]}</span>
           <span class="h-0.5 flex-1 mx-3 bg-gradient-to-r from-amber-500/40 via-slate-500/60 to-sky-500/40 rounded-full"></span>
@@ -1245,6 +1264,44 @@
         stringContainer.appendChild(pad);
       }
     }
+
+    // 指の位置が弦の隙間や外枠にズレても画面スクロールせず連続ストロム弾きする制御
+    const sixStringAreaEl = document.getElementById('sixStringArea');
+    sixStringAreaEl.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      isStrummingPointer = true;
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const padEl = target && target.closest('.string-pad');
+        if (padEl && padEl.dataset.strIdx !== undefined) {
+          const idx = parseInt(padEl.dataset.strIdx, 10);
+          lastPluckedString = idx;
+          pluckSingleString(idx);
+        }
+      }
+    }, { passive: false });
+
+    sixStringAreaEl.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const padEl = target && target.closest('.string-pad');
+        if (padEl && padEl.dataset.strIdx !== undefined) {
+          const idx = parseInt(padEl.dataset.strIdx, 10);
+          if (idx !== lastPluckedString) {
+            lastPluckedString = idx;
+            pluckSingleString(idx);
+          }
+        }
+      }
+    }, { passive: false });
+
+    sixStringAreaEl.addEventListener('touchend', () => {
+      isStrummingPointer = false;
+      lastPluckedString = -1;
+    });
 
     document.addEventListener('pointermove', (e) => {
       if (!isStrummingPointer) return;
