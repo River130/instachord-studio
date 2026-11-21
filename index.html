@@ -8,7 +8,6 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
     html, body {
-      overscroll-behavior-y: none;
       overflow-x: hidden;
     }
     body {
@@ -31,9 +30,10 @@
       transform: scale(0.95);
       filter: brightness(1.25);
     }
-    .play-lock-zone {
+    /* 右側の6本弦ストロム枠内のみ上下スワイプ演奏を優先し画面ズレを防止 */
+    .strum-zone {
       touch-action: none;
-      overscroll-behavior: none;
+      overscroll-behavior: contain;
       user-select: none;
       -webkit-user-select: none;
     }
@@ -76,7 +76,7 @@
             <h1 class="text-sm sm:text-lg font-black tracking-tight text-white">インスタコード作曲スタジオ</h1>
             <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">FREE公開版</span>
             <button onclick="openChangelogModal()" class="mono text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/50 transition flex items-center gap-1 cursor-pointer" title="アプリの更新履歴を表示">
-              <span>🆕 v1.6</span>
+              <span>🆕 v1.7</span>
               <span class="underline">更新履歴</span>
             </button>
           </div>
@@ -256,8 +256,8 @@
       <!-- 実機レイアウト：左（コードボタン群） ＋ 右（横長パッド×縦6本） -->
       <div class="grid grid-cols-1 md:grid-cols-12 gap-4 bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800">
         
-        <!-- 左側（ネック側）：数字ボタン 1〜6 ＆ 修飾ボタン -->
-        <div class="md:col-span-6 flex flex-col justify-between space-y-3 play-lock-zone">
+        <!-- 左側（ネック側）：数字ボタン 1〜6 ＆ 修飾ボタン（ここは画面スクロール可能） -->
+        <div class="md:col-span-6 flex flex-col justify-between space-y-3">
           <div class="flex items-center justify-between">
             <span class="text-xs font-black text-sky-400">◀ 左手：コード押さえ（数字＋修飾）</span>
             <button onclick="resetPadModifiers()" class="ic-btn text-[11px] px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 font-bold">
@@ -288,16 +288,16 @@
         </div>
 
         <!-- 右側（ボディ側）：縦に6つ並んだ横長パッド（弦の役割） -->
-        <div class="md:col-span-6 flex flex-col justify-between space-y-2 border-t md:border-t-0 md:border-l border-slate-800 pt-3 md:pt-0 md:pl-4 play-lock-zone">
+        <div class="md:col-span-6 flex flex-col justify-between space-y-2 border-t md:border-t-0 md:border-l border-slate-800 pt-3 md:pt-0 md:pl-4">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-black text-amber-400">▶ 右手：6弦パッド（画面固定・なぞり弾き）</span>
+            <span class="text-xs font-black text-amber-400">▶ 右手：6弦パッド（枠内なぞり弾き）</span>
             <button onclick="strumAllStrings()" class="ic-btn px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow transition">
               🎸 ジャラーン（全弦）
             </button>
           </div>
 
-          <!-- 横長パッドが縦に6つ並んだストロムエリア（画面スクロール完全ロック） -->
-          <div id="sixStringArea" class="flex flex-col gap-1.5 select-none py-1.5 px-1 rounded-xl bg-slate-900/50 play-lock-zone">
+          <!-- 横長パッドが縦に6つ並んだストロムエリア（この枠内のみ演奏優先・スクロール防止） -->
+          <div id="sixStringArea" class="strum-zone flex flex-col gap-1.5 select-none py-1.5 px-1 rounded-xl bg-slate-900/60 border border-slate-800/80">
             <!-- JSで6本の横長パッドを描画 -->
           </div>
         </div>
@@ -336,7 +336,7 @@
     <!-- フッター -->
     <footer class="pt-4 pb-6 text-center space-y-2.5 border-t border-slate-800/80">
       <p class="text-xs text-slate-300">
-        Created by <span class="font-bold text-white">River130</span> ｜ インスタコード演奏・作曲サポートWebツール（無料公開版 <span class="mono text-sky-300">v1.6</span>）
+        Created by <span class="font-bold text-white">River130</span> ｜ インスタコード演奏・作曲サポートWebツール（無料公開版 <span class="mono text-sky-300">v1.7</span>）
       </p>
       <div class="flex flex-wrap items-center justify-center gap-2">
         <button onclick="shareApp()" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-amber-300 transition">
@@ -368,17 +368,28 @@
       </div>
 
       <div class="p-5 overflow-y-auto space-y-5 text-xs sm:text-sm leading-relaxed">
-        <!-- v1.6 -->
+        <!-- v1.7 -->
         <div class="relative pl-4 border-l-2 border-sky-400 space-y-1.5">
           <div class="flex items-center gap-2">
-            <span class="mono font-black text-sky-300 text-sm">v1.6</span>
+            <span class="mono font-black text-sky-300 text-sm">v1.7</span>
             <span class="text-[10px] font-black px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40">NEW・最新</span>
+            <span class="text-xs text-slate-400">2026.11.21</span>
+          </div>
+          <div class="font-bold text-white">📱 スマホでの画面スクロール自由化 ＆ 6弦ストロム枠の独立ロック</div>
+          <ul class="list-disc list-inside text-slate-300 space-y-1 text-xs">
+            <li>ページ全体のスクロール操作を妨げず、右側の<strong>6本弦ストロム枠内をなぞる時だけ</strong>ピンポイントで画面固定する最適化を行いました。</li>
+          </ul>
+        </div>
+
+        <!-- v1.6 -->
+        <div class="relative pl-4 border-l-2 border-slate-500 space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="mono font-black text-slate-300 text-sm">v1.6</span>
             <span class="text-xs text-slate-400">2026.11.20</span>
           </div>
-          <div class="font-bold text-white">📱 演奏中の画面ズレ・誤スクロール完全防止（タッチ操作ロック）</div>
+          <div class="font-bold text-white">🎯 6弦パッドの連続タッチ座標判定（touchmove）強化</div>
           <ul class="list-disc list-inside text-slate-300 space-y-1 text-xs">
-            <li>スマホで6本弦パッドやボタンを演奏中、指の位置が少しズレても画面が上下にスクロールしないよう操作エリアを完全固定しました。</li>
-            <li>指を滑らせた際のタッチ座標判定（touchmove）を補強し、素早いストロム演奏の反応精度を高めました。</li>
+            <li>指を滑らせた際のタッチ座標判定を補強し、素早いストロム演奏の反応精度を高めました。</li>
           </ul>
         </div>
 
@@ -1265,7 +1276,7 @@
       }
     }
 
-    // 指の位置が弦の隙間や外枠にズレても画面スクロールせず連続ストロム弾きする制御
+    // 右側の6本弦枠内のみスクロールを止め、指が弦の隙間にズレても連続ストロム弾きする制御
     const sixStringAreaEl = document.getElementById('sixStringArea');
     sixStringAreaEl.addEventListener('touchstart', (e) => {
       e.preventDefault();
