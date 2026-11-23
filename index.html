@@ -78,7 +78,7 @@
             <h1 class="text-sm sm:text-lg font-black tracking-tight text-white">インスタコード作曲スタジオ</h1>
             <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">FREE公開版</span>
             <button onclick="openChangelogModal()" class="mono text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/50 transition flex items-center gap-1 cursor-pointer" title="アプリの更新履歴を表示">
-              <span>🆕 v1.8</span>
+              <span>🆕 v1.9</span>
               <span class="underline">更新履歴</span>
             </button>
           </div>
@@ -157,7 +157,7 @@
       <div class="px-4 pb-4 pt-1 text-xs sm:text-sm text-slate-300 space-y-2 border-t border-slate-800/80 leading-relaxed">
         <p><strong class="text-amber-300">STEP 1：</strong> ①でインスタコード本体の <strong>KEY</strong> を合わせ、ムードボタン（または②の数字選択）で4小節の進行を作ります。</p>
         <p><strong class="text-amber-300">STEP 2：</strong> 「▶ ループ再生」を押すと、ドラム伴奏付きでコードが鳴り続けます。表示された <span class="text-amber-300 font-bold">オレンジ色の押さえ方（例：〜 + 7 + [ 3 ]）</span> を左手で押さえ、右手で6本の弦パッドを弾きましょう。</p>
-        <p><strong class="text-amber-300">STEP 3：</strong> 弾き語りをする時は、③の<strong>「⚡ 弾き語り1タップ（基本＋7／〜直押し）」</strong>を使うと、セブンス（17・57等）も指1本・1タップで遅延なくコードチェンジできます！</p>
+        <p><strong class="text-amber-300">STEP 3：</strong> 弾き語りをする時は、③の<strong>「⚡ 弾き語り1タップ（基本＋7・〜直押し）」</strong>を使うと、セブンス（17〜67）もスワップ（1〜〜6〜）も指1本・1タップで遅延なくコードチェンジできます！</p>
       </div>
     </details>
 
@@ -241,7 +241,7 @@
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 class="text-sm sm:text-base font-bold text-amber-400">③ 仮想インスタコード実機（弾き語り高速チェンジ対応）</h2>
-          <p class="text-xs text-slate-400">「⚡ 弾き語り1タップ」ならセブンス(17/57等)も1回タップで遅延なく即チェンジできます</p>
+          <p class="text-xs text-slate-400">「⚡ 弾き語り1タップ」なら基本(1〜6)・セブンス(17〜67)・スワップ(1〜〜6〜)すべて1タップ即チェンジ！</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <label class="flex items-center gap-1.5 text-xs font-bold text-emerald-300 cursor-pointer select-none bg-slate-800/90 px-3 py-1.5 rounded-xl border border-emerald-500/40 hover:bg-slate-800 transition">
@@ -266,7 +266,7 @@
           </button>
         </div>
         <span id="padModeHint" class="text-[11px] text-amber-300/90 font-bold">
-          💡 基本(1〜6)とセブンス(17〜67)を1タップで即切替！
+          💡 基本(1〜6)・セブンス(17〜67)・スワップ(1〜〜6〜)を1タップで即切替！
         </span>
       </div>
 
@@ -274,27 +274,31 @@
       <div class="grid grid-cols-1 md:grid-cols-12 gap-4 bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800">
         
         <!-- 左側（ネック側）：モードに応じた高速ボタン群 -->
-        <div class="md:col-span-6 flex flex-col justify-between space-y-2.5">
+        <div class="md:col-span-6 flex flex-col justify-between space-y-2">
           <div class="flex items-center justify-between">
-            <span id="leftHandHeaderLabel" class="text-xs font-black text-sky-400">◀ 左手：1タップ即チェンジ（基本 ＋ 7・スワップ）</span>
+            <span id="leftHandHeaderLabel" class="text-xs font-black text-sky-400">◀ 左手：1タップ即チェンジ（基本・7・スワップ全網羅）</span>
             <button id="resetModBtn" onclick="resetPadModifiers()" class="ic-btn hidden text-[11px] px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 font-bold">
               修飾解除
             </button>
           </div>
 
-          <!-- 【モードA：弾き語り1タップ直押しパッド】基本(1〜6) ＋ 7(17〜67) ＋ スワップ(3〜等) を1画面に集約 -->
+          <!-- 【モードA：弾き語り1タップ直押しパッド】基本(1〜6) ＋ 7(17〜67) ＋ スワップ(1〜〜6〜) ＋ 特殊を1画面に完全網羅 -->
           <div id="directPadContainer" class="space-y-2 select-none">
             <div>
               <div class="text-[10px] font-bold text-slate-400 mb-1">基本コード（1〜6）</div>
-              <div id="directBasicGrid" class="grid grid-cols-3 gap-1.5"></div>
+              <div id="directBasicGrid" class="grid grid-cols-6 gap-1"></div>
             </div>
             <div>
               <div class="text-[10px] font-bold text-amber-300 mb-1">セブンス（17〜67）※1タップ即切替</div>
-              <div id="directSeventhGrid" class="grid grid-cols-3 gap-1.5"></div>
+              <div id="directSeventhGrid" class="grid grid-cols-6 gap-1"></div>
             </div>
             <div>
-              <div class="text-[10px] font-bold text-purple-300 mb-1">よく使うスワップ・特殊（1タップ即切替）</div>
-              <div id="directSwapGrid" class="grid grid-cols-4 gap-1.5"></div>
+              <div class="text-[10px] font-bold text-purple-300 mb-1">スワップ反転（1〜〜6〜）※1タップ即切替</div>
+              <div id="directAllSwapGrid" class="grid grid-cols-6 gap-1"></div>
+            </div>
+            <div>
+              <div class="text-[10px] font-bold text-emerald-300 mb-1">複合・特殊（3〜7 / 2〜7 / 5sus4 / 1dim）</div>
+              <div id="directSpecialGrid" class="grid grid-cols-4 gap-1.5"></div>
             </div>
           </div>
 
@@ -370,7 +374,7 @@
     <!-- フッター -->
     <footer class="pt-4 pb-6 text-center space-y-2.5 border-t border-slate-800/80">
       <p class="text-xs text-slate-300">
-        Created by <span class="font-bold text-white">River130</span> ｜ インスタコード演奏・作曲サポートWebツール（無料公開版 <span class="mono text-sky-300">v1.8</span>）
+        Created by <span class="font-bold text-white">River130</span> ｜ インスタコード演奏・作曲サポートWebツール（無料公開版 <span class="mono text-sky-300">v1.9</span>）
       </p>
       <div class="flex flex-wrap items-center justify-center gap-2">
         <button onclick="shareApp()" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-amber-300 transition">
@@ -402,17 +406,28 @@
       </div>
 
       <div class="p-5 overflow-y-auto space-y-5 text-xs sm:text-sm leading-relaxed">
+        <!-- v1.9 -->
+        <div class="relative pl-4 border-l-2 border-purple-400 space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="mono font-black text-purple-300 text-sm">v1.9</span>
+            <span class="text-[10px] font-black px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40">NEW・最新</span>
+            <span class="text-xs text-slate-400">2026.11.22</span>
+          </div>
+          <div class="font-bold text-white">🎸 全1〜6のスワップ反転（1〜〜6〜）も1タップ直押し完全網羅！</div>
+          <ul class="list-disc list-inside text-slate-300 space-y-1 text-xs">
+            <li>弾き語り1タップパッドに、これまで一部のみだったスワップボタンを<strong>「1〜 / 2〜 / 3〜 / 4〜 / 5〜 / 6〜」の全6種すべて</strong>追加しました。転調や切ない進行（2〜・4〜等）も1タップで遅延なく演奏できます。</li>
+          </ul>
+        </div>
+
         <!-- v1.8 -->
         <div class="relative pl-4 border-l-2 border-amber-400 space-y-1.5">
           <div class="flex items-center gap-2">
             <span class="mono font-black text-amber-300 text-sm">v1.8</span>
-            <span class="text-[10px] font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">NEW・最新</span>
             <span class="text-xs text-slate-400">2026.11.21</span>
           </div>
           <div class="font-bold text-white">⚡ 弾き語り1タップ即チェンジ ＆ 2本指同時押し（モーメンタリ）対応</div>
           <ul class="list-disc list-inside text-slate-300 space-y-1 text-xs">
-            <li>弾き語り演奏でテンポが遅れないよう、基本（1〜6）・セブンス（17〜67）・主要スワップを<strong>1ボタン直押しで即チェンジできる「⚡ 弾き語り1タップ」モード</strong>を搭載しました。</li>
-            <li>実機同様の2本指同時押し（「7」や「〜」を押さえたまま数字をタップし、指を離すと自動解除）にも対応しました。</li>
+            <li>基本（1〜6）・セブンス（17〜67）を1ボタン直押しで即チェンジできる「⚡ 弾き語り1タップ」モードと、実機同様の2本指同時押しに対応しました。</li>
           </ul>
         </div>
 
@@ -424,7 +439,7 @@
           </div>
           <div class="font-bold text-white">📱 スマホでの画面スクロール自由化 ＆ 6弦ストロム枠の独立ロック</div>
           <ul class="list-disc list-inside text-slate-300 space-y-1 text-xs">
-            <li>ページ全体のスクロール操作を妨げず、右側の<strong>6本弦ストロム枠内をなぞる時だけ</strong>ピンポイントで画面固定する最適化を行いました。</li>
+            <li>ページ全体のスクロール操作を妨げず、右側の6本弦ストロム枠内をなぞる時だけピンポイントで画面固定する最適化を行いました。</li>
           </ul>
         </div>
 
@@ -576,9 +591,9 @@
     // 左手：演奏モード（'direct' = 弾き語り1タップ直押し / 'real' = 実機2本指同時押し＆トグル）
     let padPlayMode = 'direct';
     let selectedPadNum = 1;
-    let selectedDirectMod = 'none'; // directモード用の単一修飾保持
-    let padMods = { swap: false, '7': false, sus4: false, dim: false }; // realモード用
-    let heldMods = { swap: false, '7': false, sus4: false, dim: false }; // 2本指同時押しホールド判定用
+    let selectedDirectMod = 'none';
+    let padMods = { swap: false, '7': false, sus4: false, dim: false };
+    let heldMods = { swap: false, '7': false, sus4: false, dim: false };
     let isStrummingPointer = false;
     let lastPluckedString = -1;
 
@@ -1195,8 +1210,8 @@
         directContainer.classList.remove('hidden');
         realContainer.classList.add('hidden');
         resetBtn.classList.add('hidden');
-        leftLabel.textContent = '◀ 左手：1タップ即チェンジ（基本 ＋ 7・スワップ）';
-        hint.textContent = '💡 基本(1〜6)とセブンス(17〜67)を1タップで即切替！';
+        leftLabel.textContent = '◀ 左手：1タップ即チェンジ（基本・7・スワップ全網羅）';
+        hint.textContent = '💡 基本(1〜6)・セブンス(17〜67)・スワップ(1〜〜6〜)を1タップで即切替！';
       } else {
         realBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-black bg-amber-400 text-slate-950 shadow transition';
         directBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition';
@@ -1240,7 +1255,6 @@
       if (padPlayMode === 'direct') {
         return selectedDirectMod;
       }
-      // realモード：2本指ホールド中の修飾があれば優先、なければトグル状態
       const activeSwap = heldMods.swap || padMods.swap;
       const active7 = heldMods['7'] || padMods['7'];
       const activeSus4 = heldMods.sus4 || padMods.sus4;
@@ -1297,27 +1311,29 @@
       const activeInfo = resolveSlotInfo({ num: selectedPadNum, mod: currentMod });
       document.getElementById('activePadChordLabel').textContent = `${activeInfo.chordName}  (${activeInfo.buttonGuide})`;
 
-      // --- モードA：弾き語り1タップ直押しグリッド描画 ---
+      // --- モードA：弾き語り1タップ直押しグリッド描画（1〜6、17〜67、1〜〜6〜 全網羅） ---
       const basicGrid = document.getElementById('directBasicGrid');
       const seventhGrid = document.getElementById('directSeventhGrid');
-      const swapGrid = document.getElementById('directSwapGrid');
+      const allSwapGrid = document.getElementById('directAllSwapGrid');
+      const specialGrid = document.getElementById('directSpecialGrid');
       basicGrid.innerHTML = '';
       seventhGrid.innerHTML = '';
-      swapGrid.innerHTML = '';
+      allSwapGrid.innerHTML = '';
+      specialGrid.innerHTML = '';
 
       IC_BUTTONS.forEach(btn => {
-        // 基本 (1〜6)
+        // 1段目：基本 (1〜6)
         const infoBasic = resolveSlotInfo({ num: btn.num, mod: 'none' });
         const isSelBasic = (padPlayMode === 'direct' && selectedPadNum === btn.num && selectedDirectMod === 'none');
         const bEl = document.createElement('button');
-        bEl.className = `ic-btn py-2 px-1.5 rounded-xl border-2 flex flex-col items-center justify-center transition ${
+        bEl.className = `ic-btn py-2 px-0.5 rounded-lg border-2 flex flex-col items-center justify-center transition ${
           isSelBasic
-            ? 'bg-sky-500/30 border-sky-400 text-white shadow-lg shadow-sky-500/20'
+            ? 'bg-sky-500/35 border-sky-400 text-white shadow-lg shadow-sky-500/20'
             : 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
         }`;
         bEl.innerHTML = `
-          <span class="mono text-base font-black ${isSelBasic ? 'text-sky-300' : 'text-white'} leading-none">${btn.num}</span>
-          <span class="mono text-[11px] font-bold text-slate-300 mt-0.5">${infoBasic.chordName}</span>
+          <span class="mono text-sm sm:text-base font-black ${isSelBasic ? 'text-sky-200' : 'text-white'} leading-none">${btn.num}</span>
+          <span class="mono text-[10px] font-bold text-slate-300 mt-0.5 truncate max-w-full">${infoBasic.chordName}</span>
         `;
         bEl.onpointerdown = (e) => {
           e.preventDefault();
@@ -1325,51 +1341,70 @@
         };
         basicGrid.appendChild(bEl);
 
-        // セブンス (17〜67)
+        // 2段目：セブンス (17〜67)
         const info7 = resolveSlotInfo({ num: btn.num, mod: '7' });
         const isSel7 = (padPlayMode === 'direct' && selectedPadNum === btn.num && selectedDirectMod === '7');
         const sEl = document.createElement('button');
-        sEl.className = `ic-btn py-2 px-1.5 rounded-xl border-2 flex flex-col items-center justify-center transition ${
+        sEl.className = `ic-btn py-2 px-0.5 rounded-lg border-2 flex flex-col items-center justify-center transition ${
           isSel7
-            ? 'bg-amber-400/30 border-amber-400 text-white shadow-lg shadow-amber-500/20'
+            ? 'bg-amber-400/35 border-amber-400 text-white shadow-lg shadow-amber-500/20'
             : 'bg-slate-800/90 border-amber-500/30 text-slate-200 hover:bg-slate-700'
         }`;
         sEl.innerHTML = `
-          <span class="mono text-base font-black ${isSel7 ? 'text-amber-300' : 'text-amber-400'} leading-none">${btn.num}7</span>
-          <span class="mono text-[11px] font-bold text-slate-300 mt-0.5">${info7.chordName}</span>
+          <span class="mono text-sm sm:text-base font-black ${isSel7 ? 'text-amber-200' : 'text-amber-400'} leading-none">${btn.num}7</span>
+          <span class="mono text-[10px] font-bold text-slate-300 mt-0.5 truncate max-w-full">${info7.chordName}</span>
         `;
         sEl.onpointerdown = (e) => {
           e.preventDefault();
           selectDirectChord(btn.num, '7');
         };
         seventhGrid.appendChild(sEl);
+
+        // 3段目：全スワップ (1〜〜6〜) ※2〜もここで1タップ即選択！
+        const infoSw = resolveSlotInfo({ num: btn.num, mod: 'swap' });
+        const isSelSw = (padPlayMode === 'direct' && selectedPadNum === btn.num && selectedDirectMod === 'swap');
+        const swEl = document.createElement('button');
+        swEl.className = `ic-btn py-2 px-0.5 rounded-lg border-2 flex flex-col items-center justify-center transition ${
+          isSelSw
+            ? 'bg-purple-500/35 border-purple-400 text-white shadow-lg shadow-purple-500/20'
+            : 'bg-slate-800/90 border-purple-500/30 text-slate-200 hover:bg-slate-700'
+        }`;
+        swEl.innerHTML = `
+          <span class="mono text-sm sm:text-base font-black ${isSelSw ? 'text-purple-200' : 'text-purple-300'} leading-none">${btn.num}〜</span>
+          <span class="mono text-[10px] font-bold text-slate-300 mt-0.5 truncate max-w-full">${infoSw.chordName}</span>
+        `;
+        swEl.onpointerdown = (e) => {
+          e.preventDefault();
+          selectDirectChord(btn.num, 'swap');
+        };
+        allSwapGrid.appendChild(swEl);
       });
 
-      // よく使うスワップ・特殊（3〜, 3〜7, 4〜, 5sus4）
+      // 4段目：複合・特殊（3〜7, 2〜7, 5sus4, 1dim）
       const specialList = [
-        { num: 3, mod: 'swap',  label: '3〜' },
         { num: 3, mod: 'swap7', label: '3〜7' },
-        { num: 4, mod: 'swap',  label: '4〜' },
-        { num: 5, mod: 'sus4',  label: '5sus4' }
+        { num: 2, mod: 'swap7', label: '2〜7' },
+        { num: 5, mod: 'sus4',  label: '5sus4' },
+        { num: 1, mod: 'dim',   label: '1dim' }
       ];
       specialList.forEach(sp => {
         const infoSp = resolveSlotInfo({ num: sp.num, mod: sp.mod });
         const isSelSp = (padPlayMode === 'direct' && selectedPadNum === sp.num && selectedDirectMod === sp.mod);
         const spEl = document.createElement('button');
-        spEl.className = `ic-btn py-1.5 px-1 rounded-xl border-2 flex flex-col items-center justify-center transition ${
+        spEl.className = `ic-btn py-1.5 px-1 rounded-lg border-2 flex flex-col items-center justify-center transition ${
           isSelSp
-            ? 'bg-purple-500/30 border-purple-400 text-white shadow-lg'
-            : 'bg-slate-800/90 border-purple-500/30 text-slate-200 hover:bg-slate-700'
+            ? 'bg-emerald-500/35 border-emerald-400 text-white shadow-lg'
+            : 'bg-slate-800/90 border-emerald-500/30 text-slate-200 hover:bg-slate-700'
         }`;
         spEl.innerHTML = `
-          <span class="mono text-xs font-black ${isSelSp ? 'text-purple-200' : 'text-purple-300'} leading-none">${sp.label}</span>
+          <span class="mono text-xs font-black ${isSelSp ? 'text-emerald-200' : 'text-emerald-300'} leading-none">${sp.label}</span>
           <span class="mono text-[10px] font-bold text-slate-300 mt-0.5">${infoSp.chordName}</span>
         `;
         spEl.onpointerdown = (e) => {
           e.preventDefault();
           selectDirectChord(sp.num, sp.mod);
         };
-        swapGrid.appendChild(spEl);
+        specialGrid.appendChild(spEl);
       });
 
       // --- モードB：実機2本指同時押し＆トグル描画 ---
@@ -1405,7 +1440,6 @@
         bEl.onpointerdown = (e) => {
           e.preventDefault();
           selectedPadNum = btn.num;
-          // 2本指同時押しで修飾キーをホールド中の場合はロック状態にも反映して即時更新
           renderInstaChordRealSimulator();
           if (document.getElementById('autoStrumOnBtnCheck').checked) {
             strumAllStrings();
@@ -1446,12 +1480,10 @@
     document.querySelectorAll('.mod-hold-btn').forEach(btn => {
       const modKey = btn.dataset.mod;
       let pressStartTime = 0;
-      let usedAsSimultaneous = false;
 
       btn.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         pressStartTime = Date.now();
-        usedAsSimultaneous = false;
         heldMods[modKey] = true;
         renderInstaChordRealSimulator();
       });
@@ -1460,7 +1492,6 @@
         e.preventDefault();
         const heldDuration = Date.now() - pressStartTime;
         heldMods[modKey] = false;
-        // 280ms未満の短押しならトグル切替、長押し（同時押し）なら指を離した瞬間に自動解除
         if (heldDuration < 280) {
           toggleModifier(modKey);
         } else {
